@@ -1,17 +1,19 @@
-export default function ThankYou() {
+export default function ThanksPage() {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center gap-6 bg-gray-50">
-      <h1 className="text-3xl font-bold text-green-600">✅ Richiesta inviata!</h1>
+    <div className="max-w-xl mx-auto p-8 text-center">
+      <h1 className="text-3xl font-bold mb-4">Grazie!</h1>
+      <p className="mb-6">La tua richiesta è stata inviata correttamente.</p>
 
-      <div className="flex gap-4 text-sm">
-        <span>✔️ Richiesta</span>
-        <span>➡️ Verifica</span>
-        <span>➡️ Contatto</span>
-        <span>➡️ Attivazione</span>
+      <div className="flex justify-between text-sm text-gray-500 mt-10">
+        <span>✔ Upload</span>
+        <span>✔ Consumi</span>
+        <span>✔ Offerte</span>
+        <span>✔ Dati</span>
+        <span className="font-bold text-black">✔ Conferma</span>
       </div>
 
-      <p className="text-gray-600 max-w-md text-center">
-        Un nostro operatore ti contatterà a breve per completare l'attivazione.
+      <p className="mt-8 text-gray-600">
+        A breve verrai contattato da un nostro consulente per completare la pratica.
       </p>
     </div>
   );
