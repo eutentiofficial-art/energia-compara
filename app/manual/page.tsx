@@ -5,48 +5,79 @@ import { useRouter } from "next/navigation";
 
 export default function ManualPage() {
   const router = useRouter();
-  const [luce, setLuce] = useState("");
-  const [gas, setGas] = useState("");
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  const [consumoLuce, setConsumoLuce] = useState("");
+  const [consumoGas, setConsumoGas] = useState("");
+  const [spesaAnnua, setSpesaAnnua] = useState("");
 
-    const consumoLuceAnnuale = Number(luce);
-    const consumoGasAnnuale = Number(gas);
+  const handleSubmit = () => {
+    const consumoLuceNum = Number(consumoLuce);
+    const consumoGasNum = Number(consumoGas);
+    const spesaAnnuaNum = Number(spesaAnnua);
 
-    localStorage.setItem("consumo_luce_annuo", consumoLuceAnnuale.toString());
-    localStorage.setItem("consumo_gas_annuo", consumoGasAnnuale.toString());
+    localStorage.setItem(
+      "consumi",
+      JSON.stringify({
+        consumo_luce_kwh: consumoLuceNum,
+        consumo_gas_smc: consumoGasNum,
+        spesa_annua: spesaAnnuaNum,
+      })
+    );
 
     router.push("/compare");
-  }
+  };
 
   return (
     <div className="max-w-xl mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-6">Inserisci i tuoi consumi annuali</h1>
+      <h1 className="text-2xl font-bold mb-4">Inserisci i tuoi consumi</h1>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <input
-          type="number"
-          placeholder="Consumo luce annuo (kWh)"
-          value={luce}
-          onChange={(e) => setLuce(e.target.value)}
-          required
-          className="w-full border p-2 rounded"
-        />
+      <div className="space-y-4">
+        <div>
+          <label className="block font-medium mb-1">
+            Consumo annuo luce (kWh)
+          </label>
+          <input
+            type="number"
+            value={consumoLuce}
+            onChange={(e) => setConsumoLuce(e.target.value)}
+            className="w-full border rounded px-3 py-2"
+            placeholder="es. 2700"
+          />
+        </div>
 
-        <input
-          type="number"
-          placeholder="Consumo gas annuo (Smc)"
-          value={gas}
-          onChange={(e) => setGas(e.target.value)}
-          required
-          className="w-full border p-2 rounded"
-        />
+        <div>
+          <label className="block font-medium mb-1">
+            Consumo annuo gas (Smc)
+          </label>
+          <input
+            type="number"
+            value={consumoGas}
+            onChange={(e) => setConsumoGas(e.target.value)}
+            className="w-full border rounded px-3 py-2"
+            placeholder="es. 1200"
+          />
+        </div>
 
-        <button className="w-full bg-black text-white py-3 rounded hover:bg-gray-800">
-          Prosegui
+        <div>
+          <label className="block font-medium mb-1">
+            Spesa annua attuale (€)
+          </label>
+          <input
+            type="number"
+            value={spesaAnnua}
+            onChange={(e) => setSpesaAnnua(e.target.value)}
+            className="w-full border rounded px-3 py-2"
+            placeholder="es. 1500"
+          />
+        </div>
+
+        <button
+          onClick={handleSubmit}
+          className="w-full bg-black text-white py-2 rounded hover:bg-gray-800"
+        >
+          Continua
         </button>
-      </form>
+      </div>
     </div>
   );
 }
