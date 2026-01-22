@@ -11,6 +11,7 @@ const supabase = createClient(
 
 export default function AnagraficaPage() {
   const router = useRouter();
+  const [loading, setLoading] = useState(false);
 
   const [form, setForm] = useState({
     nome: "",
@@ -25,18 +26,16 @@ export default function AnagraficaPage() {
     pagamento: "bollettino",
   });
 
-  const [loading, setLoading] = useState(false);
-
-  // Precompila email e telefono dal localStorage (step precedenti)
   useEffect(() => {
-    const email = localStorage.getItem("lead_email") || "";
-    const telefono = localStorage.getItem("lead_telefono") || "";
-    setForm((f) => ({ ...f, email, telefono }));
+    setForm((f) => ({
+      ...f,
+      email: localStorage.getItem("lead_email") || "",
+      telefono: localStorage.getItem("lead_telefono") || "",
+    }));
   }, []);
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
-    const { name, value } = e.target;
-    setForm((f) => ({ ...f, [name]: value }));
+    setForm({ ...form, [e.target.name]: e.target.value });
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -44,10 +43,8 @@ export default function AnagraficaPage() {
     setLoading(true);
 
     const leadId = localStorage.getItem("lead_id");
-
     if (!leadId) {
-      alert("Errore: lead non trovato");
-      setLoading(false);
+      alert("Lead non trovato");
       return;
     }
 
@@ -56,13 +53,15 @@ export default function AnagraficaPage() {
       .update({
         nome: form.nome,
         cognome: form.cognome,
-        stato: "completo",
+        telefono: form.telefono,
+        email: form.email,
+        stato: "inviato",
       })
       .eq("id", leadId);
 
     if (error) {
       console.error(error);
-      alert("Errore nel salvataggio");
+      alert("Errore salvataggio");
       setLoading(false);
       return;
     }
@@ -75,100 +74,29 @@ export default function AnagraficaPage() {
       <h1 className="text-2xl font-bold mb-6">Dati intestatario</h1>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        <input
-          name="nome"
-          placeholder="Nome"
-          value={form.nome}
-          onChange={handleChange}
-          required
-          className="w-full border p-2 rounded"
-        />
+        <input name="nome" placeholder="Nome" required value={form.nome} onChange={handleChange} className="w-full border p-2 rounded" />
+        <input name="cognome" placeholder="Cognome" required value={form.cognome} onChange={handleChange} className="w-full border p-2 rounded" />
 
-        <input
-          name="cognome"
-          placeholder="Cognome"
-          value={form.cognome}
-          onChange={handleChange}
-          required
-          className="w-full border p-2 rounded"
-        />
+        <input name="email" value={form.email} disabled className="w-full border p-2 rounded bg-gray-100" />
+        <input name="telefono" value={form.telefono} disabled className="w-full border p-2 rounded bg-gray-100" />
 
-        <input
-          name="email"
-          value={form.email}
-          disabled
-          className="w-full border p-2 rounded bg-gray-100"
-        />
-
-        <input
-          name="telefono"
-          value={form.telefono}
-          disabled
-          className="w-full border p-2 rounded bg-gray-100"
-        />
-
-        <input
-          name="indirizzo"
-          placeholder="Indirizzo fornitura"
-          value={form.indirizzo}
-          onChange={handleChange}
-          required
-          className="w-full border p-2 rounded"
-        />
+        <input name="indirizzo" placeholder="Indirizzo fornitura" required value={form.indirizzo} onChange={handleChange} className="w-full border p-2 rounded" />
 
         <div className="grid grid-cols-2 gap-3">
-          <input
-            name="cap"
-            placeholder="CAP"
-            value={form.cap}
-            onChange={handleChange}
-            required
-            className="border p-2 rounded"
-          />
-
-          <input
-            name="citta"
-            placeholder="Città"
-            value={form.citta}
-            onChange={handleChange}
-            required
-            className="border p-2 rounded"
-          />
+          <input name="cap" placeholder="CAP" required value={form.cap} onChange={handleChange} className="border p-2 rounded" />
+          <input name="citta" placeholder="Città" required value={form.citta} onChange={handleChange} className="border p-2 rounded" />
         </div>
 
-        <input
-          name="provincia"
-          placeholder="Provincia"
-          value={form.provincia}
-          onChange={handleChange}
-          required
-          className="w-full border p-2 rounded"
-        />
+        <input name="provincia" placeholder="Provincia" required value={form.provincia} onChange={handleChange} className="w-full border p-2 rounded" />
+        <input name="pod_pdr" placeholder="POD / PDR (opzionale)" value={form.pod_pdr} onChange={handleChange} className="w-full border p-2 rounded" />
 
-        <input
-          name="pod_pdr"
-          placeholder="POD / PDR (opzionale)"
-          value={form.pod_pdr}
-          onChange={handleChange}
-          className="w-full border p-2 rounded"
-        />
-
-        <select
-          name="pagamento"
-          value={form.pagamento}
-          onChange={handleChange}
-          className="w-full border p-2 rounded"
-        >
+        <select name="pagamento" value={form.pagamento} onChange={handleChange} className="w-full border p-2 rounded">
           <option value="bollettino">Bollettino</option>
           <option value="rid">RID Bancario</option>
           <option value="carta">Carta</option>
         </select>
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-black text-white py-3 rounded hover:bg-gray-800"
-        >
+        <button type="submit" disabled={loading} className="w-full bg-black text-white py-3 rounded hover:bg-gray-800">
           {loading ? "Invio..." : "Invia richiesta"}
         </button>
       </form>
