@@ -5,45 +5,36 @@ import { useState } from "react";
 
 export default function ServicePage() {
   const router = useRouter();
-  const [servizio, setServizio] = useState<"luce" | "gas" | "dual">("luce");
+  const [service, setService] = useState("");
 
   const next = () => {
-    localStorage.setItem("tipo_servizio", servizio);
+    if (!service) return;
+    sessionStorage.setItem("service_type", service);
     router.push("/manual/meter");
   };
 
   return (
-    <div className="max-w-md mx-auto p-6 space-y-6">
-      <h1 className="text-2xl font-bold">Che servizio vuoi confrontare?</h1>
+    <div className="max-w-xl mx-auto p-6 space-y-6">
+      <h1 className="text-2xl font-bold">Quale servizio vuoi confrontare?</h1>
 
-      <div className="flex gap-4">
-        <button
-          onClick={() => setServizio("luce")}
-          className={`px-4 py-2 border rounded ${
-            servizio === "luce" ? "bg-black text-white" : ""
-          }`}
-        >
-          Luce
-        </button>
-        <button
-          onClick={() => setServizio("gas")}
-          className={`px-4 py-2 border rounded ${
-            servizio === "gas" ? "bg-black text-white" : ""
-          }`}
-        >
-          Gas
-        </button>
-        <button
-          onClick={() => setServizio("dual")}
-          className={`px-4 py-2 border rounded ${
-            servizio === "dual" ? "bg-black text-white" : ""
-          }`}
-        >
-          Luce + Gas
-        </button>
+      <div className="grid grid-cols-3 gap-4">
+        {["Luce", "Gas", "Luce + Gas"].map((s) => (
+          <button
+            key={s}
+            onClick={() => setService(s)}
+            className={`border rounded-xl p-4 font-semibold ${
+              service === s ? "border-green-600 bg-green-50" : ""
+            }`}
+          >
+            {s}
+          </button>
+        ))}
       </div>
 
-      <button onClick={next} className="w-full bg-black text-white py-2 rounded">
+      <button
+        onClick={next}
+        className="w-full bg-green-600 text-white py-3 rounded-xl"
+      >
         Continua
       </button>
     </div>
