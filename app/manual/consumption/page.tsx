@@ -1,16 +1,26 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import ProgressBar from "@/components/ProgressBar";
 
 export default function ConsumptionPage() {
   const router = useRouter();
-  const service = sessionStorage.getItem("service_type");
+  const [service, setService] = useState<string | null>(null);
 
   const [monthlyCost, setMonthlyCost] = useState("");
   const [annualKwh, setAnnualKwh] = useState("");
   const [annualSmc, setAnnualSmc] = useState("");
   const [email, setEmail] = useState("");
+
+  useEffect(() => {
+    const s = sessionStorage.getItem("service_type");
+    const savedEmail = sessionStorage.getItem("email");
+    setService(s);
+    if (savedEmail) setEmail(savedEmail);
+  }, []);
+
+  if (!service) return null;
 
   const next = () => {
     sessionStorage.setItem("monthly_cost", monthlyCost);
@@ -21,10 +31,11 @@ export default function ConsumptionPage() {
   };
 
   return (
-    <div className="max-w-xl mx-auto p-6 space-y-6">
-      <h1 className="text-2xl font-bold">I tuoi consumi</h1>
+    <div className="max-w-xl mx-auto p-6">
+      <ProgressBar step={4} />
+      <h1 className="text-2xl font-bold mb-6">I tuoi consumi</h1>
 
-      <div>
+      <div className="mb-4">
         <label className="block mb-1 font-medium">Spesa media mensile (€)</label>
         <input
           type="number"
@@ -35,7 +46,7 @@ export default function ConsumptionPage() {
       </div>
 
       {(service === "Luce" || service === "Luce + Gas") && (
-        <div>
+        <div className="mb-4">
           <label className="block mb-1 font-medium">
             Consumo annuo luce (kWh)
           </label>
@@ -49,7 +60,7 @@ export default function ConsumptionPage() {
       )}
 
       {(service === "Gas" || service === "Luce + Gas") && (
-        <div>
+        <div className="mb-6">
           <label className="block mb-1 font-medium">
             Consumo annuo gas (Smc)
           </label>
@@ -62,7 +73,7 @@ export default function ConsumptionPage() {
         </div>
       )}
 
-      <div>
+      <div className="mb-6">
         <label className="block mb-1 font-medium">Email</label>
         <input
           type="email"
@@ -76,7 +87,7 @@ export default function ConsumptionPage() {
         onClick={next}
         className="w-full bg-green-600 text-white py-3 rounded-xl"
       >
-        Scopri le offerte
+        Continua
       </button>
     </div>
   );
