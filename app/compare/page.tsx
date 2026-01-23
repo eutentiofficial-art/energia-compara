@@ -4,26 +4,29 @@ import { useRouter } from "next/navigation";
 
 export default function ComparePage() {
   const router = useRouter();
-  const monthly = Number(sessionStorage.getItem("monthly_cost") || 0);
-  const estimatedAnnual = monthly * 12;
-  const saving = Math.round(estimatedAnnual * 0.18);
 
   return (
-    <div className="max-w-xl mx-auto p-6 space-y-6 text-center">
-      <h1 className="text-2xl font-bold">Offerta disponibile per te</h1>
+    <main className="max-w-xl mx-auto p-6">
+      <h1 className="text-2xl font-bold mb-4">Offerte disponibili</h1>
 
-      <div className="text-3xl font-extrabold text-green-600">
-        Risparmio annuo stimato: € {saving}
+      <div className="border rounded p-4 mb-4">
+        <p className="font-semibold">Offerta Energia Smart</p>
+        <p>Risparmio stimato: €180/anno</p>
       </div>
 
-      <p>Vuoi scoprire l'offerta dedicata a te?</p>
+      <input
+        type="tel"
+        placeholder="Telefono *"
+        className="w-full border p-2 rounded mb-4"
+        required
+      />
 
       <button
-        onClick={() => router.push("/manual/offer")}
-        className="w-full bg-green-600 text-white py-3 rounded-xl"
+        className="w-full bg-blue-600 text-white py-2 rounded"
+        onClick={() => router.push("/offer")}
       >
-        Continua
+        Prosegui
       </button>
-    </div>
+    </main>
   );
 }
