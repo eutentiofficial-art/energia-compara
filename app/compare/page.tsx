@@ -1,32 +1,43 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import ProgressBar from "@/components/ProgressBar";
 
 export default function ComparePage() {
   const router = useRouter();
+  const [saving, setSaving] = useState<number | null>(null);
+
+  useEffect(() => {
+    const monthly = Number(sessionStorage.getItem("monthly_cost"));
+    if (!monthly || monthly <= 0) return;
+
+    const annual = monthly * 12;
+    const estimatedSaving = Math.round(annual * 0.18);
+    setSaving(estimatedSaving);
+  }, []);
+
+  if (saving === null) return null;
 
   return (
-    <main className="max-w-xl mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-4">Offerte disponibili</h1>
+    <div className="max-w-xl mx-auto p-6 text-center">
+      <ProgressBar step={5} />
+      <h1 className="text-2xl font-bold mb-4">Offerte disponibili per te</h1>
 
-      <div className="border rounded p-4 mb-4">
-        <p className="font-semibold">Offerta Energia Smart</p>
-        <p>Risparmio stimato: €180/anno</p>
+      <div className="text-3xl font-extrabold text-green-600 mb-4">
+        Risparmio annuo stimato: € {saving}
       </div>
 
-      <input
-        type="tel"
-        placeholder="Telefono *"
-        className="w-full border p-2 rounded mb-4"
-        required
-      />
+      <p className="mb-6">
+        Vuoi scoprire l’offerta più conveniente per te?
+      </p>
 
       <button
-        className="w-full bg-blue-600 text-white py-2 rounded"
-        onClick={() => router.push("/offer")}
+        onClick={() => router.push("/manual/offer")}
+        className="w-full bg-green-600 text-white py-3 rounded-xl"
       >
-        Prosegui
+        Continua
       </button>
-    </main>
+    </div>
   );
 }
