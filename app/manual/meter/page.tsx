@@ -1,60 +1,61 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 export default function MeterPage() {
   const router = useRouter();
-  const [servizio, setServizio] = useState<string | null>(null);
-
-  const [kw, setKw] = useState("");
-  const [contatoreGas, setContatoreGas] = useState("");
-
-  useEffect(() => {
-    setServizio(localStorage.getItem("tipo_servizio"));
-  }, []);
+  const service = sessionStorage.getItem("service_type");
+  const [power, setPower] = useState("");
+  const [gasMeter, setGasMeter] = useState("");
 
   const next = () => {
-    if (servizio === "luce" || servizio === "dual") {
-      localStorage.setItem("potenza_kw", kw);
-    }
-    if (servizio === "gas" || servizio === "dual") {
-      localStorage.setItem("contatore_gas", contatoreGas);
-    }
+    sessionStorage.setItem("power_kw", power);
+    sessionStorage.setItem("gas_meter", gasMeter);
     router.push("/manual/consumption");
   };
 
   return (
-    <div className="max-w-md mx-auto p-6 space-y-6">
-      <h1 className="text-2xl font-bold">Dati contatore</h1>
+    <div className="max-w-xl mx-auto p-6 space-y-6">
+      <h1 className="text-2xl font-bold">Tipo di contatore</h1>
 
-      {(servizio === "luce" || servizio === "dual") && (
+      {(service === "Luce" || service === "Luce + Gas") && (
         <div>
-          <label className="block mb-1">Potenza contatore luce (kW)</label>
-          <input
-            type="number"
-            className="w-full border rounded px-3 py-2"
-            value={kw}
-            onChange={(e) => setKw(e.target.value)}
-            placeholder="es. 3, 4.5, 6"
-          />
+          <label className="block mb-1 font-medium">Potenza contatore (kW)</label>
+          <select
+            value={power}
+            onChange={(e) => setPower(e.target.value)}
+            className="w-full border rounded-lg p-3"
+          >
+            <option value="">Seleziona</option>
+            <option value="3">3 kW</option>
+            <option value="4.5">4.5 kW</option>
+            <option value="6">6 kW</option>
+            <option value="10">10 kW</option>
+          </select>
         </div>
       )}
 
-      {(servizio === "gas" || servizio === "dual") && (
+      {(service === "Gas" || service === "Luce + Gas") && (
         <div>
-          <label className="block mb-1">Tipo contatore gas</label>
-          <input
-            type="text"
-            className="w-full border rounded px-3 py-2"
-            value={contatoreGas}
-            onChange={(e) => setContatoreGas(e.target.value)}
-            placeholder="es. G4, G6..."
-          />
+          <label className="block mb-1 font-medium">Tipo contatore gas</label>
+          <select
+            value={gasMeter}
+            onChange={(e) => setGasMeter(e.target.value)}
+            className="w-full border rounded-lg p-3"
+          >
+            <option value="">Seleziona</option>
+            <option value="G4">G4</option>
+            <option value="G6">G6</option>
+            <option value="G10">G10</option>
+          </select>
         </div>
       )}
 
-      <button onClick={next} className="w-full bg-black text-white py-2 rounded">
+      <button
+        onClick={next}
+        className="w-full bg-green-600 text-white py-3 rounded-xl"
+      >
         Continua
       </button>
     </div>
