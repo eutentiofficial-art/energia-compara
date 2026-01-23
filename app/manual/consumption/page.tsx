@@ -1,87 +1,82 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 export default function ConsumptionPage() {
   const router = useRouter();
-  const [servizio, setServizio] = useState<string | null>(null);
+  const service = sessionStorage.getItem("service_type");
 
-  const [spesaLuce, setSpesaLuce] = useState("");
-  const [consumoLuce, setConsumoLuce] = useState("");
-  const [spesaGas, setSpesaGas] = useState("");
-  const [consumoGas, setConsumoGas] = useState("");
-
-  useEffect(() => {
-    setServizio(localStorage.getItem("tipo_servizio"));
-  }, []);
+  const [monthlyCost, setMonthlyCost] = useState("");
+  const [annualKwh, setAnnualKwh] = useState("");
+  const [annualSmc, setAnnualSmc] = useState("");
+  const [email, setEmail] = useState("");
 
   const next = () => {
-    if (servizio === "luce" || servizio === "dual") {
-      localStorage.setItem("spesa_luce_mensile", spesaLuce);
-      localStorage.setItem("consumo_luce_annuo", consumoLuce);
-    }
-    if (servizio === "gas" || servizio === "dual") {
-      localStorage.setItem("spesa_gas_mensile", spesaGas);
-      localStorage.setItem("consumo_gas_annuo", consumoGas);
-    }
-    router.push("/manual/email");
+    sessionStorage.setItem("monthly_cost", monthlyCost);
+    sessionStorage.setItem("annual_kwh", annualKwh);
+    sessionStorage.setItem("annual_smc", annualSmc);
+    sessionStorage.setItem("email", email);
+    router.push("/manual/compare");
   };
 
   return (
-    <div className="max-w-md mx-auto p-6 space-y-6">
-      <h1 className="text-2xl font-bold">Consumi</h1>
+    <div className="max-w-xl mx-auto p-6 space-y-6">
+      <h1 className="text-2xl font-bold">I tuoi consumi</h1>
 
-      {(servizio === "luce" || servizio === "dual") && (
-        <>
-          <div>
-            <label className="block mb-1">Spesa mensile luce (€)</label>
-            <input
-              type="number"
-              className="w-full border rounded px-3 py-2"
-              value={spesaLuce}
-              onChange={(e) => setSpesaLuce(e.target.value)}
-            />
-          </div>
+      <div>
+        <label className="block mb-1 font-medium">Spesa media mensile (€)</label>
+        <input
+          type="number"
+          value={monthlyCost}
+          onChange={(e) => setMonthlyCost(e.target.value)}
+          className="w-full border rounded-lg p-3"
+        />
+      </div>
 
-          <div>
-            <label className="block mb-1">Consumo annuo luce (kWh)</label>
-            <input
-              type="number"
-              className="w-full border rounded px-3 py-2"
-              value={consumoLuce}
-              onChange={(e) => setConsumoLuce(e.target.value)}
-            />
-          </div>
-        </>
+      {(service === "Luce" || service === "Luce + Gas") && (
+        <div>
+          <label className="block mb-1 font-medium">
+            Consumo annuo luce (kWh)
+          </label>
+          <input
+            type="number"
+            value={annualKwh}
+            onChange={(e) => setAnnualKwh(e.target.value)}
+            className="w-full border rounded-lg p-3"
+          />
+        </div>
       )}
 
-      {(servizio === "gas" || servizio === "dual") && (
-        <>
-          <div>
-            <label className="block mb-1">Spesa mensile gas (€)</label>
-            <input
-              type="number"
-              className="w-full border rounded px-3 py-2"
-              value={spesaGas}
-              onChange={(e) => setSpesaGas(e.target.value)}
-            />
-          </div>
-
-          <div>
-            <label className="block mb-1">Consumo annuo gas (Smc)</label>
-            <input
-              type="number"
-              className="w-full border rounded px-3 py-2"
-              value={consumoGas}
-              onChange={(e) => setConsumoGas(e.target.value)}
-            />
-          </div>
-        </>
+      {(service === "Gas" || service === "Luce + Gas") && (
+        <div>
+          <label className="block mb-1 font-medium">
+            Consumo annuo gas (Smc)
+          </label>
+          <input
+            type="number"
+            value={annualSmc}
+            onChange={(e) => setAnnualSmc(e.target.value)}
+            className="w-full border rounded-lg p-3"
+          />
+        </div>
       )}
 
-      <button onClick={next} className="w-full bg-black text-white py-2 rounded">
-        Continua
+      <div>
+        <label className="block mb-1 font-medium">Email</label>
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="w-full border rounded-lg p-3"
+        />
+      </div>
+
+      <button
+        onClick={next}
+        className="w-full bg-green-600 text-white py-3 rounded-xl"
+      >
+        Scopri le offerte
       </button>
     </div>
   );
