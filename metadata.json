@@ -1,0 +1,5 @@
+{
+  "name": "Energy Comparison Engine",
+  "description": "A sophisticated logical engine for comparing electricity, gas, and dual energy offers based on user consumption data.",
+  "requestFramePermissions": []
+}
