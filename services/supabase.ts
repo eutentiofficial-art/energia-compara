@@ -1,9 +1,10 @@
-
 import { createClient } from '@supabase/supabase-js';
 
-// NOTA: In un ambiente di produzione reale, questi verrebbero caricati da process.env
-// Per questa demo, assumiamo che le chiavi siano gestite correttamente dal sistema.
-const supabaseUrl = 'https://your-project.supabase.co';
-const supabaseKey = 'your-anon-key';
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseKey) {
+  throw new Error('Missing Supabase environment variables. Check your .env.local file.');
+}
 
 export const supabase = createClient(supabaseUrl, supabaseKey);
