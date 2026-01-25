@@ -1,4 +1,3 @@
-
 import React from 'react';
 import ComparisonFunnel from './components/ComparisonFunnel';
 
