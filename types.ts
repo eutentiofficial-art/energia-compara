@@ -1,4 +1,3 @@
-
 export type ServiceType = 'luce' | 'gas' | 'dual';
 export type CustomerType = 'privato' | 'azienda';
 export type FunnelStep = 'profilo' | 'consumi' | 'email' | 'confronto' | 'anagrafica';
