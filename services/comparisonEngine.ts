@@ -1,4 +1,3 @@
-
 import { 
   LeadData, 
   OfferLuce, 
@@ -17,7 +16,6 @@ export class ComparisonEngine {
   /**
    * Calcola la spesa annua stimata per un'offerta Luce.
    */
-  // Fixed: use LeadData instead of LeadConsumption
   static calculateLuceAnnualCost(consumption: LeadData, offer: OfferLuce): number {
     const energyCost = offer.prezzo_kwh * consumption.consumo_luce_kwh;
     const fixedFees = offer.quota_fissa_mensile * 12;
@@ -27,7 +25,6 @@ export class ComparisonEngine {
   /**
    * Calcola la spesa annua stimata per un'offerta Gas.
    */
-  // Fixed: use LeadData instead of LeadConsumption
   static calculateGasAnnualCost(consumption: LeadData, offer: OfferGas): number {
     const energyCost = offer.prezzo_smc * consumption.consumo_gas_smc;
     const fixedFees = offer.quota_fissa_mensile * 12;
@@ -37,7 +34,6 @@ export class ComparisonEngine {
   /**
    * Calcola la spesa annua stimata per un'offerta Dual.
    */
-  // Fixed: use LeadData instead of LeadConsumption
   static calculateDualAnnualCost(consumption: LeadData, offer: OfferDual): number {
     const luceCost = offer.prezzo_kwh * consumption.consumo_luce_kwh;
     const gasCost = offer.prezzo_smc * consumption.consumo_gas_smc;
@@ -48,7 +44,6 @@ export class ComparisonEngine {
   /**
    * Funzione principale per ottenere il confronto di un'offerta specifica rispetto ai consumi dell'utente.
    */
-  // Fixed: use LeadData instead of LeadConsumption
   static compareOffer(
     consumption: LeadData, 
     offer: OfferLuce | OfferGas | OfferDual, 
@@ -86,7 +81,6 @@ export class ComparisonEngine {
    * Task 1 Requirement: getBestOffer
    * Riceve i consumi e una lista di offerte candidate per restituire la migliore (quella con più risparmio).
    */
-  // Fixed: use LeadData instead of LeadConsumption
   static getBestOffer(
     consumption: LeadData,
     serviceType: ServiceType,
