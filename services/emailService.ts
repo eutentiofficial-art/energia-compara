@@ -1,41 +1,116 @@
-import { supabase } from './supabase';
+import emailjs from '@emailjs/browser';
 
 /**
- * Email Service
- * Responsabile dell'invio delle email tramite invocazione della Supabase Edge Function 'send-contract'.
+ * Email Service con EmailJS
+ * Gestisce l'invio delle email di conferma al cliente e notifica all'admin
  */
+
+// Configurazione EmailJS
+const EMAILJS_CONFIG = {
+  publicKey: 'wyGyW0nMt_dLVwEo3',
+  serviceId: 'service_6r5jntl',
+  templateCustomer: 'template_contract',
+  templateAdmin: 'template_lead'
+};
 
 export class EmailService {
   /**
-   * Invia le email di contratto al cliente e all'amministratore.
-   * La logica di invio effettiva è gestita lato server nella Edge Function per sicurezza.
+   * Inizializza EmailJS con la public key
    */
-  static async sendContractEmails(leadData: any, contractData: any, offerName: string) {
+  private static init() {
+    emailjs.init(EMAILJS_CONFIG.publicKey);
+  }
+
+  /**
+   * Invia email di conferma al cliente
+   */
+  private static async sendCustomerEmail(leadData: any, contractData: any, offerName: string, savings: number) {
+    this.init();
+
+    const templateParams = {
+      customer_name: `${leadData.nome} ${leadData.cognome}`,
+      customer_email: leadData.email,
+      offer_name: offerName,
+      address: contractData.indirizzo,
+      city: contractData.citta,
+      cap: contractData.cap,
+      savings: savings.toFixed(0),
+      to_email: leadData.email
+    };
+
     try {
-      console.log('Invocazione Edge Function "send-contract" per:', leadData.email);
+      const response = await emailjs.send(
+        EMAILJS_CONFIG.serviceId,
+        EMAILJS_CONFIG.templateCustomer,
+        templateParams
+      );
+      console.log('Email cliente inviata con successo:', response);
+      return true;
+    } catch (error) {
+      console.error('Errore invio email cliente:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Invia email di notifica all'admin
+   */
+  private static async sendAdminEmail(leadData: any, contractData: any, offerName: string) {
+    this.init();
+
+    const templateParams = {
+      customer_name: `${leadData.nome} ${leadData.cognome}`,
+      customer_email: leadData.email,
+      customer_phone: leadData.telefono || 'Non fornito',
+      codice_fiscale: contractData.codice_fiscale,
+      offer_name: offerName,
+      address: contractData.indirizzo,
+      cap: contractData.cap,
+      city: contractData.citta,
+      provincia: contractData.provincia,
+      pod: contractData.pod || 'Non fornito',
+      pdr: contractData.pdr || 'Non fornito',
+      payment_method: contractData.metodo_pagamento,
+      iban: contractData.iban || 'N/A',
+      lead_id: leadData.id || 'N/A'
+    };
+
+    try {
+      const response = await emailjs.send(
+        EMAILJS_CONFIG.serviceId,
+        EMAILJS_CONFIG.templateAdmin,
+        templateParams
+      );
+      console.log('Email admin inviata con successo:', response);
+      return true;
+    } catch (error) {
+      console.error('Errore invio email admin:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Metodo principale: invia entrambe le email
+   */
+  static async sendContractEmails(leadData: any, contractData: any, offerName: string, savings: number = 0) {
+    try {
+      console.log('Invio email tramite EmailJS...');
+
+      // Invia email al cliente
+      const customerSent = await this.sendCustomerEmail(leadData, contractData, offerName, savings);
       
-      const { data, error } = await supabase.functions.invoke('send-contract', {
-        body: { 
-          leadData, 
-          contractData, 
-          offerName 
-        },
-      });
+      // Invia email all'admin
+      const adminSent = await this.sendAdminEmail(leadData, contractData, offerName);
 
-      if (error) {
-        console.error('Errore durante l\'invocazione della funzione Supabase:', error);
-        return false;
-      }
-
-      if (data?.success) {
-        console.log('Edge Function eseguita con successo:', data.message);
+      if (customerSent && adminSent) {
+        console.log('Entrambe le email inviate con successo!');
         return true;
       } else {
-        console.warn('La Edge Function ha risposto con un errore logico:', data?.error);
+        console.warn('Una o entrambe le email non sono state inviate');
         return false;
       }
-    } catch (err) {
-      console.error('Errore imprevisto durante la chiamata al servizio email:', err);
+    } catch (error) {
+      console.error('Errore critico nel servizio email:', error);
       return false;
     }
   }
