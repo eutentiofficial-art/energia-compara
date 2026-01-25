@@ -289,3 +289,376 @@ const Step4Result = ({ result, currentMonthly, phone, setPhone, nextStep, isSavi
     </div>
   );
 };
+// STEP 6: OFFER DETAIL
+const Step6OfferDetail = ({ result, nextStep }: any) => {
+  const offer = result.dettagli_offerta;
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center gap-5 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+        <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center text-2xl font-black text-indigo-600 shadow-sm border border-slate-100 shrink-0">
+          {result.provider_name.charAt(0)}
+        </div>
+        <div>
+          <h2 className="text-xl font-black text-slate-800 leading-tight">{offer.nome_offerta}</h2>
+          <p className="text-indigo-600 text-sm font-bold">{result.provider_name}</p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col gap-1">
+          <p className="text-[10px] uppercase font-bold text-slate-400">Prezzo Luce</p>
+          <p className="text-lg font-black text-slate-800">{('prezzo_kwh' in offer) ? `€ ${offer.prezzo_kwh}/kWh` : 'N/A'}</p>
+        </div>
+        <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col gap-1">
+          <p className="text-[10px] uppercase font-bold text-slate-400">Prezzo Gas</p>
+          <p className="text-lg font-black text-slate-800">{('prezzo_smc' in offer) ? `€ ${offer.prezzo_smc}/SMC` : 'N/A'}</p>
+        </div>
+        <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col gap-1">
+          <p className="text-[10px] uppercase font-bold text-slate-400">Costi Fissi</p>
+          <p className="text-lg font-black text-slate-800">€ {offer.quota_fissa_mensile}/mese</p>
+        </div>
+        <div className="p-5 bg-emerald-50 rounded-2xl border border-emerald-100 flex flex-col gap-1">
+          <p className="text-[10px] uppercase font-bold text-emerald-600">Bonus Benvenuto</p>
+          <p className="text-lg font-black text-emerald-700">€ {offer.bonus_attivazione}</p>
+        </div>
+      </div>
+
+      <div className="space-y-3 px-2">
+        <div className="flex items-center gap-3 text-sm text-slate-600">
+          <div className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
+            <Check size={12} className="text-emerald-600" />
+          </div>
+          Fornitura 100% Green inclusa
+        </div>
+        <div className="flex items-center gap-3 text-sm text-slate-600">
+          <div className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
+            <Check size={12} className="text-emerald-600" />
+          </div>
+          Prezzo bloccato per 12 mesi
+        </div>
+      </div>
+
+      <div className="pt-4 flex flex-col items-center">
+        <p className="text-slate-500 text-sm font-medium mb-3">Ricevi questa offerta in email</p>
+        <button onClick={nextStep} className="w-full bg-indigo-600 text-white py-5 rounded-2xl font-black hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 shadow-xl">
+          Procedi <ArrowRight size={20} />
+        </button>
+      </div>
+    </div>
+  );
+};
+
+// STEP 7: ANAGRAFICA
+const Step7Anagrafica = ({ leadData, updateLeadData, bestOffer, onSubmit, isSaving }: any) => {
+  const [form, setForm] = useState<ContractData & { nome: string; cognome: string }>({
+    nome: leadData.nome || '',
+    cognome: leadData.cognome || '',
+    codice_fiscale: '', 
+    indirizzo: '', 
+    cap: '', 
+    citta: '', 
+    provincia: 'MI',
+    pod: '', 
+    pdr: '', 
+    metodo_pagamento: 'iban', 
+    iban: ''
+  });
+
+  const isDual = bestOffer.tipo_offerta === 'dual';
+  const isLuce = bestOffer.tipo_offerta === 'luce' || isDual;
+  const isGas = bestOffer.tipo_offerta === 'gas' || isDual;
+
+  const isFormValid = form.nome && form.cognome && form.codice_fiscale && form.indirizzo && form.cap && form.citta && (form.metodo_pagamento === 'bollettino' || (form.metodo_pagamento === 'iban' && form.iban && form.iban.length > 10));
+
+  return (
+    <div className="space-y-8">
+      <div className="text-center">
+        <h2 className="text-xl md:text-2xl font-black text-slate-900 leading-tight">Ricevi l'offerta a te dedicata</h2>
+        <p className="text-indigo-600 text-[10px] md:text-xs font-bold uppercase tracking-[0.4em] mt-2">Validità 3 giorni</p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div className="md:col-span-1">
+          <label className="text-[10px] uppercase font-bold text-slate-400 ml-1 mb-1 block">Nome</label>
+          <input type="text" value={form.nome} onChange={(e) => setForm({...form, nome: e.target.value})} className="w-full p-3 bg-slate-50 border-2 border-slate-100 focus:border-indigo-500 rounded-xl outline-none shadow-sm" placeholder="Es: Mario" />
+        </div>
+        <div className="md:col-span-1">
+          <label className="text-[10px] uppercase font-bold text-slate-400 ml-1 mb-1 block">Cognome</label>
+          <input type="text" value={form.cognome} onChange={(e) => setForm({...form, cognome: e.target.value})} className="w-full p-3 bg-slate-50 border-2 border-slate-100 focus:border-indigo-500 rounded-xl outline-none shadow-sm" placeholder="Es: Rossi" />
+        </div>
+
+        <div className="md:col-span-2">
+          <label className="text-[10px] uppercase font-bold text-slate-400 ml-1 mb-1 block">Codice Fiscale</label>
+          <input type="text" value={form.codice_fiscale} onChange={(e) => setForm({...form, codice_fiscale: e.target.value})} className="w-full p-3 bg-slate-50 border-2 border-slate-100 focus:border-indigo-500 rounded-xl outline-none shadow-sm uppercase" placeholder="RSSMRA80A01H501U" />
+        </div>
+
+        <div className="md:col-span-2">
+          <label className="text-[10px] uppercase font-bold text-slate-400 ml-1 mb-1 block">Indirizzo di residenza</label>
+          <input type="text" value={form.indirizzo} onChange={(e) => setForm({...form, indirizzo: e.target.value})} className="w-full p-3 bg-slate-50 border-2 border-slate-100 focus:border-indigo-500 rounded-xl outline-none shadow-sm" placeholder="Via Roma, 10" />
+        </div>
+
+        <div>
+          <label className="text-[10px] uppercase font-bold text-slate-400 ml-1 mb-1 block">CAP</label>
+          <input type="text" value={form.cap} onChange={(e) => setForm({...form, cap: e.target.value})} className="w-full p-3 bg-slate-50 border-2 border-slate-100 focus:border-indigo-500 rounded-xl outline-none shadow-sm" placeholder="20121" />
+        </div>
+        
+        <div>
+          <label className="text-[10px] uppercase font-bold text-slate-400 ml-1 mb-1 block">Città</label>
+          <input type="text" value={form.citta} onChange={(e) => setForm({...form, citta: e.target.value})} className="w-full p-3 bg-slate-50 border-2 border-slate-100 focus:border-indigo-500 rounded-xl outline-none shadow-sm" placeholder="Milano" />
+        </div>
+
+        <div className="md:col-span-2">
+          <label className="text-[10px] uppercase font-bold text-slate-400 ml-1 mb-1 block">Provincia</label>
+          <div className="relative">
+            <select 
+              value={form.provincia} 
+              onChange={(e) => setForm({...form, provincia: e.target.value})} 
+              className="w-full p-3 bg-slate-50 border-2 border-slate-100 focus:border-indigo-500 rounded-xl outline-none shadow-sm appearance-none"
+            >
+              {PROVINCE_ITALIANE.map(p => <option key={p} value={p}>{p}</option>)}
+            </select>
+            <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+          </div>
+        </div>
+
+        {isLuce && (
+          <div className="md:col-span-2">
+            <label className="text-[10px] uppercase font-bold text-indigo-500 ml-1 mb-1 block">Codice POD (Luce)</label>
+            <input type="text" value={form.pod} onChange={(e) => setForm({...form, pod: e.target.value})} className="w-full p-3 bg-indigo-50/30 border-2 border-transparent focus:border-indigo-500 rounded-xl outline-none" placeholder="IT001E..." />
+          </div>
+        )}
+        {isGas && (
+          <div className="md:col-span-2">
+            <label className="text-[10px] uppercase font-bold text-amber-500 ml-1 mb-1 block">Codice PDR (Gas)</label>
+            <input type="text" value={form.pdr} onChange={(e) => setForm({...form, pdr: e.target.value})} className="w-full p-3 bg-amber-50/30 border-2 border-transparent focus:border-amber-500 rounded-xl outline-none" placeholder="5023..." />
+          </div>
+        )}
+
+        <div className="md:col-span-2 mt-4">
+          <label className="text-[10px] uppercase font-bold text-slate-400 ml-1 mb-3 block tracking-widest">Metodo di Pagamento</label>
+          <div className="grid grid-cols-2 gap-3">
+            <button 
+              type="button"
+              onClick={() => setForm({...form, metodo_pagamento: 'iban'})}
+              className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${form.metodo_pagamento === 'iban' ? 'border-indigo-600 bg-indigo-50 text-indigo-600 shadow-sm' : 'border-slate-100 bg-white text-slate-400 hover:border-slate-200'}`}
+            >
+              <CardIcon size={20} />
+              <span className="font-bold text-xs">Conto Corrente (SDD)</span>
+            </button>
+            <button 
+              type="button"
+              onClick={() => setForm({...form, metodo_pagamento: 'bollettino'})}
+              className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${form.metodo_pagamento === 'bollettino' ? 'border-indigo-600 bg-indigo-50 text-indigo-600 shadow-sm' : 'border-slate-100 bg-white text-slate-400 hover:border-slate-200'}`}
+            >
+              <FileText size={20} />
+              <span className="font-bold text-xs">Bollettino Postale</span>
+            </button>
+          </div>
+        </div>
+
+        <AnimatePresence>
+          {form.metodo_pagamento === 'iban' && (
+            <motion.div 
+              initial={{ height: 0, opacity: 0 }} 
+              animate={{ height: 'auto', opacity: 1 }} 
+              exit={{ height: 0, opacity: 0 }}
+              className="md:col-span-2 overflow-hidden"
+            >
+              <div className="pt-2 pb-1">
+                <label className="text-[10px] uppercase font-bold text-indigo-500 ml-1 mb-1 block">Codice IBAN</label>
+                <input 
+                  type="text" 
+                  value={form.iban} 
+                  onChange={(e) => setForm({...form, iban: e.target.value.toUpperCase()})} 
+                  className="w-full p-3 bg-indigo-50/30 border-2 border-transparent focus:border-indigo-500 rounded-xl outline-none font-mono" 
+                  placeholder="IT60X00000..." 
+                />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      <button 
+        onClick={() => {
+          updateLeadData({ nome: form.nome, cognome: form.cognome });
+          onSubmit(form);
+        }} 
+        disabled={isSaving || !isFormValid} 
+        className="w-full bg-indigo-600 text-white py-5 rounded-2xl font-black hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 shadow-2xl disabled:opacity-50 mt-4"
+      >
+        {isSaving ? <Loader2 className="animate-spin" size={20} /> : 'Conferma e richiedi offerta'}
+      </button>
+    </div>
+  );
+};
+
+// SUCCESS PAGE
+const SuccessPage = () => (
+  <div className="text-center py-10 space-y-10">
+    <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="w-24 h-24 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-inner">
+      <CheckCircle2 size={48} />
+    </motion.div>
+    
+    <div className="space-y-3">
+      <h2 className="text-4xl font-black text-slate-900 tracking-tight">Grazie, richiesta ricevuta!</h2>
+      <p className="text-slate-500 text-lg max-w-sm mx-auto">Abbiamo inviato i dettagli tecnici della tua offerta al tuo indirizzo email.</p>
+    </div>
+
+    <div className="bg-slate-50 p-8 rounded-[2rem] border border-slate-100 text-left space-y-6">
+      <h4 className="font-black text-slate-800 flex items-center gap-2 text-xl">
+        <Info size={24} className="text-indigo-600" /> Cosa accadrà dopo?
+      </h4>
+      <div className="space-y-4">
+        {[
+          { icon: Mail, text: "Riceverai un'email di riepilogo con i dettagli dell'offerta scelta.", color: "text-blue-500" },
+          { icon: Phone, text: "Un nostro consulente dedicato ti contatterà per validare i dati tecnici.", color: "text-green-500" },
+          { icon: FileCheck, text: "Riceverai il contratto digitale per la firma elettronica certificata.", color: "text-indigo-500" }
+        ].map((item, idx) => (
+          <div key={idx} className="flex gap-4 items-start">
+            <div className={`w-10 h-10 rounded-xl bg-white flex items-center justify-center shrink-0 shadow-sm border border-slate-100 ${item.color}`}>
+              <item.icon size={20} />
+            </div>
+            <p className="text-slate-600 text-sm leading-relaxed pt-2">{item.text}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    <button onClick={() => window.location.reload()} className="bg-slate-900 text-white px-10 py-4 rounded-2xl font-black hover:bg-black transition-all shadow-xl">
+      Torna alla Home
+    </button>
+  </div>
+);
+
+// COMPONENTE PRINCIPALE
+const ComparisonFunnel: React.FC = () => {
+  const [currentStep, setCurrentStep] = useState(1);
+  const [isSaving, setIsSaving] = useState(false);
+  const [leadId, setLeadId] = useState<string | null>(null);
+  const [bestOffer, setBestOffer] = useState<ComparisonResult | null>(null);
+  const [data, setData] = useState<LeadData>({ 
+    tipo_cliente: 'privato', 
+    tipo_servizio: 'luce', 
+    spesa_mensile: 0, 
+    consumo_luce_kwh: 0, 
+    consumo_gas_smc: 0, 
+    email: '', 
+    telefono: '', 
+    nome: '', 
+    cognome: '' 
+  });
+  const [phoneInput, setPhoneInput] = useState('');
+
+  const updateData = (newData: Partial<LeadData>) => setData((prev) => ({ ...prev, ...newData }));
+
+  const handleCalculate = async (result: ComparisonResult) => {
+    setIsSaving(true);
+    try {
+      const { data: lead, error } = await supabase.from('leads').insert([{
+        tipo_cliente: data.tipo_cliente, 
+        email: data.email, 
+        origine: 'manual', 
+        step_corrente: 'comparison', 
+        stato: 'parziale'
+      }]).select().single();
+      
+      if (error) throw error;
+      
+      setLeadId(lead.id);
+      setBestOffer(result);
+      setCurrentStep(result.risparmio_annuo <= 0 ? 99 : 4);
+    } catch (err) { 
+      console.error('Error:', err);
+      setBestOffer(result); 
+      setCurrentStep(result.risparmio_annuo > 0 ? 4 : 99); 
+    } finally { 
+      setIsSaving(false); 
+    }
+  };
+
+  const handleUpdatePhoneAndProceed = async () => {
+    setIsSaving(true);
+    try {
+      updateData({ telefono: phoneInput });
+      if (leadId) await supabase.from('leads').update({ telefono: phoneInput, stato: 'completo' }).eq('id', leadId);
+      setCurrentStep(6);
+    } catch (err) { 
+      console.error('Error:', err);
+      setCurrentStep(6); 
+    } finally { 
+      setIsSaving(false); 
+    }
+  };
+
+  const handleFinalSubmit = async (contract: ContractData) => {
+    setIsSaving(true);
+    try {
+      if (!leadId || !bestOffer) return;
+      
+      await supabase.from('contracts_pre').insert([{
+        lead_id: leadId, 
+        offer_id: bestOffer.offer_id, 
+        tipo_pratica: 'cambio', 
+        indirizzo_fornitura: contract.indirizzo, 
+        cap: contract.cap, 
+        citta: contract.citta, 
+        provincia: contract.provincia, 
+        stato: 'in_attesa'
+      }]);
+      
+      await supabase.from('leads').update({ 
+        stato: 'inviato', 
+        step_corrente: 'anagrafica', 
+        nome: data.nome, 
+        cognome: data.cognome 
+      }).eq('id', leadId);
+      
+      await EmailService.sendContractEmails(data, contract, bestOffer.offer_name, bestOffer.risparmio_annuo);
+      
+      setCurrentStep(100);
+    } catch (err) { 
+      console.error('Error:', err);
+      setCurrentStep(100); 
+    } finally { 
+      setIsSaving(false); 
+    }
+  };
+
+  const progress = currentStep >= 99 ? 100 : (currentStep / 7) * 100;
+
+  return (
+    <div className="w-full max-w-2xl px-4 py-8">
+      <div className="mb-10 w-full bg-slate-200 h-1.5 rounded-full overflow-hidden shadow-inner">
+        <motion.div className="bg-indigo-600 h-full" animate={{ width: `${progress}%` }} />
+      </div>
+      <div className="bg-white rounded-[3rem] shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-slate-100 min-h-[600px] flex flex-col p-8 md:p-14 relative overflow-hidden">
+        <AnimatePresence mode="wait">
+          {currentStep === 1 && <motion.div key="s1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><Step1Profile data={data} updateData={updateData} nextStep={() => setCurrentStep(2)} /></motion.div>}
+          {currentStep === 2 && <motion.div key="s2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><Step2Consumption data={data} updateData={updateData} onFinish={handleCalculate} isSaving={isSaving} /></motion.div>}
+          
+          {currentStep === 4 && bestOffer && (
+            <motion.div key="s4" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+              <Step4Result 
+                result={bestOffer} 
+                currentMonthly={data.spesa_mensile}
+                phone={phoneInput} 
+                setPhone={setPhoneInput} 
+                nextStep={handleUpdatePhoneAndProceed} 
+                isSaving={isSaving} 
+              />
+            </motion.div>
+          )}
+
+          {currentStep === 6 && bestOffer && <motion.div key="s6" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}><Step6OfferDetail result={bestOffer} nextStep={() => setCurrentStep(7)} /></motion.div>}
+          {currentStep === 7 && bestOffer && <motion.div key="s7" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}><Step7Anagrafica leadData={data} updateLeadData={updateData} bestOffer={bestOffer} onSubmit={handleFinalSubmit} isSaving={isSaving} /></motion.div>}
+          
+          {currentStep === 100 && <motion.div key="success" initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}><SuccessPage /></motion.div>}
+          {currentStep === 99 && <motion.div key="exit" initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}><div className="text-center py-10 space-y-5"><div className="w-20 h-20 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto"><AlertCircle size={40} /></div><h2 className="text-2xl font-black text-slate-800">Sei già al top!</h2><p className="text-slate-500">La tua tariffa attuale è eccellente, ti consigliamo di non cambiarla.</p><button onClick={() => window.location.reload()} className="text-indigo-600 font-bold hover:underline">Ricomincia ricerca</button></div></motion.div>}
+        </AnimatePresence>
+      </div>
+    </div>
+  );
+};
+
+export default ComparisonFunnel;
