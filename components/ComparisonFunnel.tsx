@@ -657,48 +657,67 @@ const ComparisonFunnel: React.FC = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [leadId, setLeadId] = useState<string | null>(null);
   const [bestOffer, setBestOffer] = useState<ComparisonResult | null>(null);
-  const [data, setData] = useState<LeadData>({ 
-    tipo_cliente: 'privato', 
-    tipo_servizio: 'luce', 
-    spesa_mensile: 0, 
-    consumo_luce_kwh: 0, 
-    consumo_gas_smc: 0, 
-    email: '', 
-    telefono: '', 
-    nome: '', 
-    cognome: '' 
-  });
+  // COMPONENTE PRINCIPALE - FIX DEFINITIVO
+const ComparisonFunnel: React.FC = () => {
+  const [currentStep, setCurrentStep] = useState(1);
+  const [isSaving, setIsSaving] = useState(false);
+  const [leadId, setLeadId] = useState<string | null>(null);
+  const [bestOffer, setBestOffer] = useState<ComparisonResult | null>(null);
   const [phoneInput, setPhoneInput] = useState('');
+  
+  // STATO COMPLETO
+  const [tipoCliente, setTipoCliente] = useState<'privato' | 'azienda'>('privato');
+  const [tipoServizio, setTipoServizio] = useState<ServiceType>('luce');
+  const [spesaMensile, setSpesaMensile] = useState(0);
+  const [consumoLuceKwh, setConsumoLuceKwh] = useState(0);
+  const [consumoGasSmc, setConsumoGasSmc] = useState(0);
+  const [email, setEmail] = useState('');
+  const [telefono, setTelefono] = useState('');
+  const [nome, setNome] = useState('');
+  const [cognome, setCognome] = useState('');
 
-  const updateData = (newData: Partial<LeadData>) => setData((prev) => ({ ...prev, ...newData }));
+  // Costruisci data object quando serve
+  const getData = (): LeadData => ({
+    tipo_cliente: tipoCliente,
+    tipo_servizio: tipoServizio,
+    spesa_mensile: spesaMensile,
+    consumo_luce_kwh: consumoLuceKwh,
+    consumo_gas_smc: consumoGasSmc,
+    email: email,
+    telefono: telefono,
+    nome: nome,
+    cognome: cognome
+  });
 
-  // STEP 2 → STEP 4: Calcola e salva lead + consumi
+  // Update generico
+  const updateData = (newData: Partial<LeadData>) => {
+    if (newData.tipo_cliente !== undefined) setTipoCliente(newData.tipo_cliente);
+    if (newData.tipo_servizio !== undefined) setTipoServizio(newData.tipo_servizio);
+    if (newData.spesa_mensile !== undefined) setSpesaMensile(newData.spesa_mensile);
+    if (newData.consumo_luce_kwh !== undefined) setConsumoLuceKwh(newData.consumo_luce_kwh);
+    if (newData.consumo_gas_smc !== undefined) setConsumoGasSmc(newData.consumo_gas_smc);
+    if (newData.email !== undefined) setEmail(newData.email);
+    if (newData.telefono !== undefined) setTelefono(newData.telefono);
+    if (newData.nome !== undefined) setNome(newData.nome);
+    if (newData.cognome !== undefined) setCognome(newData.cognome);
+  };
+
+  // STEP 2 → STEP 4: Calcola e salva
   const handleCalculate = async (result: ComparisonResult) => {
     setIsSaving(true);
-    const handleCalculate = async (result: ComparisonResult) => {
-  setIsSaving(true);
-  
-  // DEBUG - RIMUOVERE DOPO IL TEST
-  console.log('🔍 DATI DA SALVARE:', {
-    tipo_cliente: data.tipo_cliente,
-    tipo_servizio: data.tipo_servizio,
-    email: data.email,
-    spesa_mensile: data.spesa_mensile,
-    consumo_luce_kwh: data.consumo_luce_kwh,
-    consumo_gas_smc: data.consumo_gas_smc
-  });
-  
-  try {
-    // ... resto del codice
-}
+    
+    const currentData = getData();
+    
+    console.log('🔍 DATI DA SALVARE:', currentData);
+    
     try {
-      // 1. Salva il lead con TUTTI i dati dello step 1 e 2
+      // 1. Salva lead
       const { data: lead, error: leadError } = await supabase
         .from('leads')
         .insert([{
-          tipo_cliente: data.tipo_cliente,
-          tipo_servizio: data.tipo_servizio,  // NUOVO!
-          email: data.email,
+          tipo_cliente: currentData.tipo_cliente,
+          tipo_servizio: currentData.tipo_servizio,
+          email: currentData.email,
           origine: 'manual',
           step_corrente: 'comparison',
           stato: 'parziale'
@@ -706,53 +725,37 @@ const ComparisonFunnel: React.FC = () => {
         .select()
         .single();
       
-      if (leadError) {
-        console.error('Errore salvataggio lead:', leadError);
-        throw leadError;
-      }
+      if (leadError) throw leadError;
       
-      console.log('Lead salvato:', lead);
+      console.log('✅ Lead salvato:', lead);
       setLeadId(lead.id);
       
-      // 2. Salva i consumi in lead_consumptions
-      const { error: consError } = await supabase
-        .from('lead_consumptions')
-        .insert([{
-          lead_id: lead.id,
-          spesa_mensile: data.spesa_mensile,
-          consumo_luce_kwh: data.consumo_luce_kwh,
-          consumo_gas_smc: data.consumo_gas_smc
-        }]);
+      // 2. Salva consumi
+      await supabase.from('lead_consumptions').insert([{
+        lead_id: lead.id,
+        spesa_mensile: currentData.spesa_mensile,
+        consumo_luce_kwh: currentData.consumo_luce_kwh,
+        consumo_gas_smc: currentData.consumo_gas_smc
+      }]);
       
-      if (consError) {
-        console.error('Errore salvataggio consumi:', consError);
-      } else {
-        console.log('Consumi salvati!');
-      }
+      console.log('✅ Consumi salvati');
       
-      // 3. Salva il comparison result
-      const { error: compError } = await supabase
-        .from('lead_comparisons')
-        .insert([{
-          lead_id: lead.id,
-          offer_id: result.offer_id,
-          tipo_offerta: result.tipo_offerta,
-          spesa_annua_stimata: result.spesa_annua_stimata,
-          risparmio_annuo: result.risparmio_annuo
-        }]);
+      // 3. Salva comparison
+      await supabase.from('lead_comparisons').insert([{
+        lead_id: lead.id,
+        offer_id: result.offer_id,
+        tipo_offerta: result.tipo_offerta,
+        spesa_annua_stimata: result.spesa_annua_stimata,
+        risparmio_annuo: result.risparmio_annuo
+      }]);
       
-      if (compError) {
-        console.error('Errore salvataggio comparison:', compError);
-      } else {
-        console.log('Comparison salvato!');
-      }
+      console.log('✅ Comparison salvato');
       
       setBestOffer(result);
       setCurrentStep(result.risparmio_annuo <= 0 ? 99 : 4);
       
     } catch (err) { 
-      console.error('Errore generale:', err);
-      // Mostra comunque il risultato anche se il salvataggio fallisce
+      console.error('❌ Errore:', err);
       setBestOffer(result); 
       setCurrentStep(result.risparmio_annuo > 0 ? 4 : 99); 
     } finally { 
@@ -764,101 +767,72 @@ const ComparisonFunnel: React.FC = () => {
   const handleUpdatePhoneAndProceed = async () => {
     setIsSaving(true);
     try {
-      updateData({ telefono: phoneInput });
+      setTelefono(phoneInput);
       
       if (leadId) {
-        const { error } = await supabase
-          .from('leads')
-          .update({ 
-            telefono: phoneInput, 
-            stato: 'completo' 
-          })
-          .eq('id', leadId);
+        await supabase.from('leads').update({ 
+          telefono: phoneInput, 
+          stato: 'completo' 
+        }).eq('id', leadId);
         
-        if (error) {
-          console.error('Errore aggiornamento telefono:', error);
-        } else {
-          console.log('Telefono salvato!');
-        }
+        console.log('✅ Telefono salvato');
       }
       
       setCurrentStep(6);
     } catch (err) { 
-      console.error('Errore:', err);
+      console.error('❌ Errore:', err);
       setCurrentStep(6); 
     } finally { 
       setIsSaving(false); 
     }
   };
 
-  // STEP 7 → SUCCESS: Salva contratto e invia email
+  // STEP 7 → SUCCESS
   const handleFinalSubmit = async (contract: ContractData) => {
     setIsSaving(true);
     try {
-      if (!leadId || !bestOffer) {
-        alert('Errore: dati mancanti');
-        return;
-      }
+      if (!leadId || !bestOffer) throw new Error('Dati mancanti');
       
-      // 1. Aggiorna il lead con nome e cognome
-      const { error: updateError } = await supabase
-        .from('leads')
-        .update({ 
-          nome: contract.nome, 
-          cognome: contract.cognome,
-          stato: 'inviato', 
-          step_corrente: 'anagrafica'
-        })
-        .eq('id', leadId);
+      setNome(contract.nome);
+      setCognome(contract.cognome);
       
-      if (updateError) {
-        console.error('Errore aggiornamento lead:', updateError);
-      } else {
-        console.log('Lead aggiornato con nome/cognome!');
-      }
-      
-      // 2. Salva il pre-contratto
-      const { error: contractError } = await supabase
-        .from('contracts_pre')
-        .insert([{
-          lead_id: leadId,
-          offer_id: bestOffer.offer_id,
-          tipo_pratica: 'cambio',
-          indirizzo_fornitura: contract.indirizzo,
-          cap: contract.cap,
-          citta: contract.citta,
-          provincia: contract.provincia,
-          stato: 'in_attesa'
-        }]);
-      
-      if (contractError) {
-        console.error('Errore salvataggio contratto:', contractError);
-      } else {
-        console.log('Contratto salvato!');
-      }
-      
-      // 3. Invia email
-      const emailData = {
-        ...data,
-        nome: contract.nome,
+      // Aggiorna lead
+      await supabase.from('leads').update({ 
+        nome: contract.nome, 
         cognome: contract.cognome,
-        id: leadId
-      };
+        stato: 'inviato', 
+        step_corrente: 'anagrafica'
+      }).eq('id', leadId);
       
-      await EmailService.sendContractEmails(
-        emailData, 
-        contract, 
-        bestOffer.offer_name, 
-        bestOffer.risparmio_annuo
-      );
+      console.log('✅ Lead aggiornato con nome/cognome');
       
-      console.log('Email inviate!');
+      // Salva contratto
+      await supabase.from('contracts_pre').insert([{
+        lead_id: leadId,
+        offer_id: bestOffer.offer_id,
+        tipo_pratica: 'cambio',
+        indirizzo_fornitura: contract.indirizzo,
+        cap: contract.cap,
+        citta: contract.citta,
+        provincia: contract.provincia,
+        stato: 'in_attesa'
+      }]);
+      
+      console.log('✅ Contratto salvato');
+      
+      // Invia email
+      const emailData = getData();
+      emailData.nome = contract.nome;
+      emailData.cognome = contract.cognome;
+      emailData.id = leadId;
+      
+      await EmailService.sendContractEmails(emailData, contract, bestOffer.offer_name, bestOffer.risparmio_annuo);
+      
+      console.log('✅ Email inviate');
       setCurrentStep(100);
       
     } catch (err) { 
-      console.error('Errore finale:', err);
-      alert('Si è verificato un errore. Controlla la console.');
-      // Vai comunque allo step success per non bloccare l'utente
+      console.error('❌ Errore finale:', err);
       setCurrentStep(100); 
     } finally { 
       setIsSaving(false); 
@@ -866,6 +840,7 @@ const ComparisonFunnel: React.FC = () => {
   };
 
   const progress = currentStep >= 99 ? 100 : (currentStep / 7) * 100;
+  const data = getData();
 
   return (
     <div className="w-full max-w-2xl px-4 py-8">
@@ -890,7 +865,7 @@ const ComparisonFunnel: React.FC = () => {
             <motion.div key="s4" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
               <Step4Result 
                 result={bestOffer} 
-                currentMonthly={data.spesa_mensile}
+                currentMonthly={spesaMensile}
                 phone={phoneInput} 
                 setPhone={setPhoneInput} 
                 nextStep={handleUpdatePhoneAndProceed} 
