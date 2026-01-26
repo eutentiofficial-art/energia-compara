@@ -674,6 +674,47 @@ const ComparisonFunnel: React.FC = () => {
   // STEP 2 → STEP 4: Calcola e salva lead + consumi
   const handleCalculate = async (result: ComparisonResult) => {
     setIsSaving(true);
+    const handleCalculate = async (result: ComparisonResult) => {
+  setIsSaving(true);
+  
+  // DEBUG - RIMUOVERE DOPO IL TEST
+  console.log('🔍 DATI DA SALVARE:', {
+    tipo_cliente: data.tipo_cliente,
+    tipo_servizio: data.tipo_servizio,
+    email: data.email,
+    spesa_mensile: data.spesa_mensile,
+    consumo_luce_kwh: data.consumo_luce_kwh,
+    consumo_gas_smc: data.consumo_gas_smc
+  });
+  
+  try {
+    // ... resto del codice
+```
+
+**Salva, committa, aspetta il deploy di Netlify.**
+
+---
+
+## **🧪 TEST**
+
+1. Ricarica il sito
+2. Compila lo step 1 (scegli Luce + Privato)
+3. Compila lo step 2 (inserisci consumi)
+4. **PRIMA** di cliccare "Calcola Risparmio", apri la Console (F12)
+5. Clicca "Calcola Risparmio"
+6. Guarda cosa stampa nella console
+
+---
+
+**Dovresti vedere qualcosa tipo:**
+```
+🔍 DATI DA SALVARE: {
+  tipo_cliente: "privato",
+  tipo_servizio: "luce",   ← Questo c'è?
+  email: "test@test.it",
+  spesa_mensile: 100,
+  ...
+}
     try {
       // 1. Salva il lead con TUTTI i dati dello step 1 e 2
       const { data: lead, error: leadError } = await supabase
