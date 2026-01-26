@@ -650,6 +650,7 @@ const SuccessPage = () => (
 );
 
 // COMPONENTE PRINCIPALE
+// COMPONENTE PRINCIPALE - AGGIORNATO
 const ComparisonFunnel: React.FC = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [isSaving, setIsSaving] = useState(false);
@@ -670,24 +671,71 @@ const ComparisonFunnel: React.FC = () => {
 
   const updateData = (newData: Partial<LeadData>) => setData((prev) => ({ ...prev, ...newData }));
 
+  // STEP 2 → STEP 4: Calcola e salva lead + consumi
   const handleCalculate = async (result: ComparisonResult) => {
     setIsSaving(true);
     try {
-      const { data: lead, error } = await supabase.from('leads').insert([{
-        tipo_cliente: data.tipo_cliente, 
-        email: data.email, 
-        origine: 'manual', 
-        step_corrente: 'comparison', 
-        stato: 'parziale'
-      }]).select().single();
+      // 1. Salva il lead con TUTTI i dati dello step 1 e 2
+      const { data: lead, error: leadError } = await supabase
+        .from('leads')
+        .insert([{
+          tipo_cliente: data.tipo_cliente,
+          tipo_servizio: data.tipo_servizio,  // NUOVO!
+          email: data.email,
+          origine: 'manual',
+          step_corrente: 'comparison',
+          stato: 'parziale'
+        }])
+        .select()
+        .single();
       
-      if (error) throw error;
+      if (leadError) {
+        console.error('Errore salvataggio lead:', leadError);
+        throw leadError;
+      }
       
+      console.log('Lead salvato:', lead);
       setLeadId(lead.id);
+      
+      // 2. Salva i consumi in lead_consumptions
+      const { error: consError } = await supabase
+        .from('lead_consumptions')
+        .insert([{
+          lead_id: lead.id,
+          spesa_mensile: data.spesa_mensile,
+          consumo_luce_kwh: data.consumo_luce_kwh,
+          consumo_gas_smc: data.consumo_gas_smc
+        }]);
+      
+      if (consError) {
+        console.error('Errore salvataggio consumi:', consError);
+      } else {
+        console.log('Consumi salvati!');
+      }
+      
+      // 3. Salva il comparison result
+      const { error: compError } = await supabase
+        .from('lead_comparisons')
+        .insert([{
+          lead_id: lead.id,
+          offer_id: result.offer_id,
+          tipo_offerta: result.tipo_offerta,
+          spesa_annua_stimata: result.spesa_annua_stimata,
+          risparmio_annuo: result.risparmio_annuo
+        }]);
+      
+      if (compError) {
+        console.error('Errore salvataggio comparison:', compError);
+      } else {
+        console.log('Comparison salvato!');
+      }
+      
       setBestOffer(result);
       setCurrentStep(result.risparmio_annuo <= 0 ? 99 : 4);
+      
     } catch (err) { 
-      console.error('Error:', err);
+      console.error('Errore generale:', err);
+      // Mostra comunque il risultato anche se il salvataggio fallisce
       setBestOffer(result); 
       setCurrentStep(result.risparmio_annuo > 0 ? 4 : 99); 
     } finally { 
@@ -695,48 +743,105 @@ const ComparisonFunnel: React.FC = () => {
     }
   };
 
+  // STEP 4 → STEP 6: Aggiorna telefono
   const handleUpdatePhoneAndProceed = async () => {
     setIsSaving(true);
     try {
       updateData({ telefono: phoneInput });
-      if (leadId) await supabase.from('leads').update({ telefono: phoneInput, stato: 'completo' }).eq('id', leadId);
+      
+      if (leadId) {
+        const { error } = await supabase
+          .from('leads')
+          .update({ 
+            telefono: phoneInput, 
+            stato: 'completo' 
+          })
+          .eq('id', leadId);
+        
+        if (error) {
+          console.error('Errore aggiornamento telefono:', error);
+        } else {
+          console.log('Telefono salvato!');
+        }
+      }
+      
       setCurrentStep(6);
     } catch (err) { 
-      console.error('Error:', err);
+      console.error('Errore:', err);
       setCurrentStep(6); 
     } finally { 
       setIsSaving(false); 
     }
   };
 
+  // STEP 7 → SUCCESS: Salva contratto e invia email
   const handleFinalSubmit = async (contract: ContractData) => {
     setIsSaving(true);
     try {
-      if (!leadId || !bestOffer) return;
+      if (!leadId || !bestOffer) {
+        alert('Errore: dati mancanti');
+        return;
+      }
       
-      await supabase.from('contracts_pre').insert([{
-        lead_id: leadId, 
-        offer_id: bestOffer.offer_id, 
-        tipo_pratica: 'cambio', 
-        indirizzo_fornitura: contract.indirizzo, 
-        cap: contract.cap, 
-        citta: contract.citta, 
-        provincia: contract.provincia, 
-        stato: 'in_attesa'
-      }]);
+      // 1. Aggiorna il lead con nome e cognome
+      const { error: updateError } = await supabase
+        .from('leads')
+        .update({ 
+          nome: contract.nome, 
+          cognome: contract.cognome,
+          stato: 'inviato', 
+          step_corrente: 'anagrafica'
+        })
+        .eq('id', leadId);
       
-      await supabase.from('leads').update({ 
-        stato: 'inviato', 
-        step_corrente: 'anagrafica', 
-        nome: data.nome, 
-        cognome: data.cognome 
-      }).eq('id', leadId);
+      if (updateError) {
+        console.error('Errore aggiornamento lead:', updateError);
+      } else {
+        console.log('Lead aggiornato con nome/cognome!');
+      }
       
-      await EmailService.sendContractEmails(data, contract, bestOffer.offer_name, bestOffer.risparmio_annuo);
+      // 2. Salva il pre-contratto
+      const { error: contractError } = await supabase
+        .from('contracts_pre')
+        .insert([{
+          lead_id: leadId,
+          offer_id: bestOffer.offer_id,
+          tipo_pratica: 'cambio',
+          indirizzo_fornitura: contract.indirizzo,
+          cap: contract.cap,
+          citta: contract.citta,
+          provincia: contract.provincia,
+          stato: 'in_attesa'
+        }]);
       
+      if (contractError) {
+        console.error('Errore salvataggio contratto:', contractError);
+      } else {
+        console.log('Contratto salvato!');
+      }
+      
+      // 3. Invia email
+      const emailData = {
+        ...data,
+        nome: contract.nome,
+        cognome: contract.cognome,
+        id: leadId
+      };
+      
+      await EmailService.sendContractEmails(
+        emailData, 
+        contract, 
+        bestOffer.offer_name, 
+        bestOffer.risparmio_annuo
+      );
+      
+      console.log('Email inviate!');
       setCurrentStep(100);
+      
     } catch (err) { 
-      console.error('Error:', err);
+      console.error('Errore finale:', err);
+      alert('Si è verificato un errore. Controlla la console.');
+      // Vai comunque allo step success per non bloccare l'utente
       setCurrentStep(100); 
     } finally { 
       setIsSaving(false); 
@@ -752,8 +857,17 @@ const ComparisonFunnel: React.FC = () => {
       </div>
       <div className="bg-white rounded-[3rem] shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-slate-100 min-h-[600px] flex flex-col p-8 md:p-14 relative overflow-hidden">
         <AnimatePresence mode="wait">
-          {currentStep === 1 && <motion.div key="s1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><Step1Profile data={data} updateData={updateData} nextStep={() => setCurrentStep(2)} /></motion.div>}
-          {currentStep === 2 && <motion.div key="s2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}><Step2Consumption data={data} updateData={updateData} onFinish={handleCalculate} isSaving={isSaving} /></motion.div>}
+          {currentStep === 1 && (
+            <motion.div key="s1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+              <Step1Profile data={data} updateData={updateData} nextStep={() => setCurrentStep(2)} />
+            </motion.div>
+          )}
+          
+          {currentStep === 2 && (
+            <motion.div key="s2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+              <Step2Consumption data={data} updateData={updateData} onFinish={handleCalculate} isSaving={isSaving} />
+            </motion.div>
+          )}
           
           {currentStep === 4 && bestOffer && (
             <motion.div key="s4" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
@@ -768,11 +882,44 @@ const ComparisonFunnel: React.FC = () => {
             </motion.div>
           )}
 
-          {currentStep === 6 && bestOffer && <motion.div key="s6" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}><Step6OfferDetail result={bestOffer} nextStep={() => setCurrentStep(7)} /></motion.div>}
-          {currentStep === 7 && bestOffer && <motion.div key="s7" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}><Step7Anagrafica leadData={data} updateLeadData={updateData} bestOffer={bestOffer} onSubmit={handleFinalSubmit} isSaving={isSaving} /></motion.div>}
+          {currentStep === 6 && bestOffer && (
+            <motion.div key="s6" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+              <Step6OfferDetail result={bestOffer} nextStep={() => setCurrentStep(7)} />
+            </motion.div>
+          )}
           
-          {currentStep === 100 && <motion.div key="success" initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}><SuccessPage /></motion.div>}
-          {currentStep === 99 && <motion.div key="exit" initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}><div className="text-center py-10 space-y-5"><div className="w-20 h-20 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto"><AlertCircle size={40} /></div><h2 className="text-2xl font-black text-slate-800">Sei già al top!</h2><p className="text-slate-500">La tua tariffa attuale è eccellente, ti consigliamo di non cambiarla.</p><button onClick={() => window.location.reload()} className="text-indigo-600 font-bold hover:underline">Ricomincia ricerca</button></div></motion.div>}
+          {currentStep === 7 && bestOffer && (
+            <motion.div key="s7" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
+              <Step7Anagrafica 
+                leadData={data} 
+                updateLeadData={updateData} 
+                bestOffer={bestOffer} 
+                onSubmit={handleFinalSubmit} 
+                isSaving={isSaving} 
+              />
+            </motion.div>
+          )}
+          
+          {currentStep === 100 && (
+            <motion.div key="success" initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
+              <SuccessPage />
+            </motion.div>
+          )}
+          
+          {currentStep === 99 && (
+            <motion.div key="exit" initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
+              <div className="text-center py-10 space-y-5">
+                <div className="w-20 h-20 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto">
+                  <AlertCircle size={40} />
+                </div>
+                <h2 className="text-2xl font-black text-slate-800">Sei già al top!</h2>
+                <p className="text-slate-500">La tua tariffa attuale è eccellente, ti consigliamo di non cambiarla.</p>
+                <button onClick={() => window.location.reload()} className="text-indigo-600 font-bold hover:underline">
+                  Ricomincia ricerca
+                </button>
+              </div>
+            </motion.div>
+          )}
         </AnimatePresence>
       </div>
     </div>
