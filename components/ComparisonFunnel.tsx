@@ -689,31 +689,6 @@ const ComparisonFunnel: React.FC = () => {
   
   try {
     // ... resto del codice
-```
-
-**Salva, committa, aspetta il deploy di Netlify.**
-
----
-
-## **🧪 TEST**
-
-1. Ricarica il sito
-2. Compila lo step 1 (scegli Luce + Privato)
-3. Compila lo step 2 (inserisci consumi)
-4. **PRIMA** di cliccare "Calcola Risparmio", apri la Console (F12)
-5. Clicca "Calcola Risparmio"
-6. Guarda cosa stampa nella console
-
----
-
-**Dovresti vedere qualcosa tipo:**
-```
-🔍 DATI DA SALVARE: {
-  tipo_cliente: "privato",
-  tipo_servizio: "luce",   ← Questo c'è?
-  email: "test@test.it",
-  spesa_mensile: 100,
-  ...
 }
     try {
       // 1. Salva il lead con TUTTI i dati dello step 1 e 2
