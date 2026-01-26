@@ -9,13 +9,13 @@ const TestSupabase: React.FC = () => {
       setResult('Invio dati...');
       
       const testData = {
-        tipo_cliente: 'privato',
-        tipo_servizio: 'luce',
-        email: 'test@test.com',
-        origine: 'manual',
-        step_corrente: 'test',
-        stato: 'parziale'
-      };
+  tipo_cliente: 'privato',
+  tipo_servizio: 'luce',
+  email: 'test@test.com',
+  origine: 'manual',
+  step_corrente: 'comparison',  // ← ERA 'test', ORA 'comparison'
+  stato: 'parziale'
+};
       
       console.log('📤 Invio:', testData);
       
