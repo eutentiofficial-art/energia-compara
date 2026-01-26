@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Zap, Flame, LayoutGrid, Building2, User, Mail, ShieldCheck, 
@@ -15,6 +15,7 @@ const PROVINCE_ITALIANE = [
   "AG", "AL", "AN", "AO", "AQ", "AR", "AP", "AT", "AV", "BA", "BT", "BL", "BN", "BG", "BI", "BO", "BZ", "BS", "BR", "CA", "CL", "CB", "CE", "CT", "CZ", "CH", "CO", "CS", "CR", "KR", "CN", "EN", "FM", "FE", "FI", "FG", "FC", "GE", "GO", "GR", "IM", "IS", "SP", "LT", "LE", "LC", "LI", "LO", "LU", "MC", "MN", "MS", "MT", "ME", "MI", "MO", "MB", "NA", "NO", "NU", "OR", "PD", "PA", "PR", "PV", "PG", "PU", "PE", "PC", "PI", "PT", "PN", "PZ", "PO", "RG", "RA", "RC", "RE", "RI", "RN", "RM", "RO", "SA", "SS", "SV", "SI", "SR", "SO", "TA", "TE", "TR", "TO", "TP", "TN", "TV", "TS", "UD", "VA", "VE", "VB", "VC", "VR", "VV", "VI", "VT"
 ];
 
+// MOCK OFFERS - solo come fallback
 const MOCK_OFFERS: (OfferLuce | OfferGas | OfferDual)[] = [
   { 
     id: '1', 
@@ -56,6 +57,40 @@ const MOCK_OFFERS: (OfferLuce | OfferGas | OfferDual)[] = [
     provider: { id: 'p3', nome: 'Eni', attivo: true, created_at: '' } 
   } as OfferDual
 ];
+
+// Funzione per caricare offerte da Supabase
+async function loadOffersFromDB(serviceType: ServiceType): Promise<(OfferLuce | OfferGas | OfferDual)[]> {
+  try {
+    let tableName = '';
+    
+    if (serviceType === 'luce') tableName = 'offers_luce';
+    else if (serviceType === 'gas') tableName = 'offers_gas';
+    else if (serviceType === 'dual') tableName = 'offers_dual';
+    
+    const { data, error } = await supabase
+      .from(tableName)
+      .select(`
+        *,
+        provider:providers(*)
+      `)
+      .eq('visibile', true);
+    
+    if (error) {
+      console.error('Errore caricamento offerte:', error);
+      return MOCK_OFFERS.filter(o => {
+        if (serviceType === 'luce') return 'prezzo_kwh' in o && !('prezzo_smc' in o);
+        if (serviceType === 'gas') return 'prezzo_smc' in o && !('prezzo_kwh' in o);
+        return 'prezzo_kwh' in o && 'prezzo_smc' in o;
+      });
+    }
+    
+    console.log('Offerte caricate da DB:', data);
+    return data || [];
+  } catch (err) {
+    console.error('Errore critico:', err);
+    return MOCK_OFFERS;
+  }
+}
 // STEP 1: PROFILO E SERVIZIO
 const Step1Profile = ({ data, updateData, nextStep }: any) => {
   const services = [
