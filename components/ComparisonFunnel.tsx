@@ -205,12 +205,13 @@ const Step1Profile = ({ data, updateData, nextStep }: any) => {
         </div>
       </div>
 
-      <button onClick={nextStep} className="w-full bg-indigo-600 text-white py-5 rounded-2xl font-bold hover:bg-indigo-700 shadow-xl transition-all transform hover:-translate-y-1">
-        Continua
-      </button>
-    </div>
-  );
-};
+      <button 
+  onClick={nextStep} 
+  disabled={!data.tipo_servizio || !data.tipo_cliente}
+  className="w-full bg-indigo-600 text-white py-5 rounded-2xl font-bold hover:bg-indigo-700 shadow-xl transition-all transform hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed"
+>
+  Continua
+</button>
 
 // STEP 2: CONSUMI + EMAIL (aggiornato per caricare offerte da DB)
 const Step2Consumption = ({ data, updateData, onFinish, isSaving }: any) => {
