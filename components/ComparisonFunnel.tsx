@@ -152,10 +152,93 @@ const Step1Profile = ({ data, updateData, nextStep }: any) => {
 };
 
 // STEP 2: CONSUMI + EMAIL
+// STEP 1: PROFILO E SERVIZIO (invariato)
+const Step1Profile = ({ data, updateData, nextStep }: any) => {
+  const services = [
+    { id: 'luce', label: 'Luce', icon: Zap },
+    { id: 'gas', label: 'Gas', icon: Flame },
+    { id: 'dual', label: 'Luce + Gas', icon: LayoutGrid }
+  ];
+  const clients = [
+    { id: 'privato', label: 'Privato', icon: User },
+    { id: 'azienda', label: 'Azienda', icon: Building2 }
+  ];
+
+  return (
+    <div className="space-y-8">
+      <div className="text-center">
+        <h2 className="text-2xl font-bold text-slate-800">Cosa vuoi confrontare?</h2>
+        <p className="text-slate-500 text-sm">Personalizza la tua ricerca energetica</p>
+      </div>
+      
+      <div className="space-y-6">
+        <div>
+          <p className="text-[10px] uppercase font-bold text-slate-400 mb-3 ml-1 tracking-widest">Tipo di Servizio</p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            {services.map((s) => (
+              <button 
+                key={s.id} 
+                onClick={() => updateData({ tipo_servizio: s.id as ServiceType })} 
+                className={`p-4 md:p-6 rounded-2xl border-2 transition-all flex flex-col items-center gap-2 md:gap-3 ${data.tipo_servizio === s.id ? 'border-indigo-600 bg-indigo-50 text-indigo-600 shadow-md' : 'border-slate-100 bg-white text-slate-500 hover:border-slate-200'}`}
+              >
+                <s.icon className="w-6 h-6 md:w-8 md:h-8" />
+                <span className="font-bold text-sm md:text-base">{s.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <p className="text-[10px] uppercase font-bold text-slate-400 mb-3 ml-1 tracking-widest">Tipo di Profilo</p>
+          <div className="grid grid-cols-2 gap-3">
+            {clients.map((c) => (
+              <button 
+                key={c.id} 
+                onClick={() => updateData({ tipo_cliente: c.id as any })} 
+                className={`p-3 md:p-5 rounded-xl border-2 transition-all flex flex-row items-center justify-center gap-2 ${data.tipo_cliente === c.id ? 'border-indigo-600 bg-indigo-50 text-indigo-600 shadow-sm' : 'border-slate-100 bg-white text-slate-400 hover:border-slate-200'}`}
+              >
+                <c.icon size={18} />
+                <span className="font-bold text-sm">{c.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <button onClick={nextStep} className="w-full bg-indigo-600 text-white py-5 rounded-2xl font-bold hover:bg-indigo-700 shadow-xl transition-all transform hover:-translate-y-1">
+        Continua
+      </button>
+    </div>
+  );
+};
+
+// STEP 2: CONSUMI + EMAIL (aggiornato per caricare offerte da DB)
 const Step2Consumption = ({ data, updateData, onFinish, isSaving }: any) => {
-  const handleCalculate = () => {
-    const best = ComparisonEngine.getBestOffer(data, data.tipo_servizio, MOCK_OFFERS);
-    if (onFinish && best) onFinish(best);
+  const [loading, setLoading] = useState(false);
+
+  const handleCalculate = async () => {
+    setLoading(true);
+    try {
+      // Carica offerte dal database
+      const offers = await loadOffersFromDB(data.tipo_servizio);
+      
+      if (!offers || offers.length === 0) {
+        alert('Nessuna offerta disponibile per questo servizio al momento.');
+        setLoading(false);
+        return;
+      }
+      
+      const best = ComparisonEngine.getBestOffer(data, data.tipo_servizio, offers);
+      
+      if (onFinish && best) {
+        onFinish(best);
+      }
+    } catch (err) {
+      console.error('Errore calcolo:', err);
+      alert('Errore durante il calcolo. Riprova.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const isEmailValid = data.email && data.email.includes('@') && data.email.length > 5;
@@ -225,10 +308,10 @@ const Step2Consumption = ({ data, updateData, onFinish, isSaving }: any) => {
 
       <button 
         onClick={handleCalculate} 
-        disabled={isSaving || !isConsumptionValid || !isEmailValid} 
+        disabled={isSaving || loading || !isConsumptionValid || !isEmailValid} 
         className="w-full bg-indigo-600 text-white py-5 rounded-2xl font-bold hover:bg-indigo-700 disabled:opacity-50 transition-all flex items-center justify-center gap-2 shadow-xl"
       >
-        {isSaving ? <Loader2 className="animate-spin" size={20} /> : <>Calcola Risparmio <ArrowRight size={20} /></>}
+        {(isSaving || loading) ? <Loader2 className="animate-spin" size={20} /> : <>Calcola Risparmio <ArrowRight size={20} /></>}
       </button>
     </div>
   );
