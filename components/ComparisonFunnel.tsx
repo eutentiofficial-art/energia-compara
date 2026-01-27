@@ -712,16 +712,23 @@ const ComparisonFunnel: React.FC = () => {
     
     try {
       // 1. Salva lead
-      const { data: lead, error: leadError } = await supabase
-        .from('leads')
-        .insert([{
-          tipo_cliente: currentData.tipo_cliente,
-          tipo_servizio: currentData.tipo_servizio,
-          email: currentData.email,
-          origine: 'manual',
-          step_corrente: 'comparison',
-          stato: 'parziale'
-        }])
+      // Costruisci oggetto esplicito
+const leadToInsert = {
+  tipo_cliente: tipoCliente,  // usa direttamente lo state
+  tipo_servizio: tipoServizio,  // usa direttamente lo state
+  email: email,  // usa direttamente lo state
+  origine: 'manual',
+  step_corrente: 'comparison',
+  stato: 'parziale'
+};
+
+console.log('📤 Inserisco lead:', leadToInsert);
+
+const { data: lead, error: leadError } = await supabase
+  .from('leads')
+  .insert([leadToInsert])
+  .select()
+  .single();
         .select()
         .single();
       
