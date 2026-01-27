@@ -738,12 +738,16 @@ const { data: lead, error: leadError } = await supabase
       setLeadId(lead.id);
       
       // 2. Salva consumi
-      await supabase.from('lead_consumptions').insert([{
-        lead_id: lead.id,
-        spesa_mensile: currentData.spesa_mensile,
-        consumo_luce_kwh: currentData.consumo_luce_kwh,
-        consumo_gas_smc: currentData.consumo_gas_smc
-      }]);
+      const consumiToInsert = {
+  lead_id: lead.id,
+  spesa_mensile: spesaMensile,
+  consumo_luce_kwh: consumoLuceKwh,
+  consumo_gas_smc: consumoGasSmc
+};
+
+console.log('📤 Inserisco consumi:', consumiToInsert);
+
+await supabase.from('lead_consumptions').insert([consumiToInsert]);
       
       console.log('✅ Consumi salvati');
       
