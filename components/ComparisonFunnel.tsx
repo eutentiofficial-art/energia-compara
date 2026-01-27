@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Zap, Flame, LayoutGrid, Building2, User, Mail, ShieldCheck, 
@@ -15,64 +15,37 @@ const PROVINCE_ITALIANE = [
   "AG", "AL", "AN", "AO", "AQ", "AR", "AP", "AT", "AV", "BA", "BT", "BL", "BN", "BG", "BI", "BO", "BZ", "BS", "BR", "CA", "CL", "CB", "CE", "CT", "CZ", "CH", "CO", "CS", "CR", "KR", "CN", "EN", "FM", "FE", "FI", "FG", "FC", "GE", "GO", "GR", "IM", "IS", "SP", "LT", "LE", "LC", "LI", "LO", "LU", "MC", "MN", "MS", "MT", "ME", "MI", "MO", "MB", "NA", "NO", "NU", "OR", "PD", "PA", "PR", "PV", "PG", "PU", "PE", "PC", "PI", "PT", "PN", "PZ", "PO", "RG", "RA", "RC", "RE", "RI", "RN", "RM", "RO", "SA", "SS", "SV", "SI", "SR", "SO", "TA", "TE", "TR", "TO", "TP", "TN", "TV", "TS", "UD", "VA", "VE", "VB", "VC", "VR", "VV", "VI", "VT"
 ];
 
-// MOCK OFFERS - solo come fallback
 const MOCK_OFFERS: (OfferLuce | OfferGas | OfferDual)[] = [
   { 
-    id: '1', 
-    provider_id: 'p1', 
-    nome_offerta: 'Eco-Green Fix', 
-    tipo_tariffa: 'fissa', 
-    prezzo_kwh: 0.12, 
-    quota_fissa_mensile: 10, 
-    bonus_attivazione: 50, 
-    green_energy: true, 
-    penale_recesso: false, 
-    visibile: true, 
-    created_at: '', 
+    id: '1', provider_id: 'p1', nome_offerta: 'Eco-Green Fix', tipo_tariffa: 'fissa', 
+    prezzo_kwh: 0.12, quota_fissa_mensile: 10, bonus_attivazione: 50, 
+    green_energy: true, penale_recesso: false, visibile: true, created_at: '', 
     provider: { id: 'p1', nome: 'GreenNetwork', attivo: true, created_at: '' } 
   } as OfferLuce,
   { 
-    id: '2', 
-    provider_id: 'p2', 
-    nome_offerta: 'Gas Safe Plus', 
-    tipo_tariffa: 'fissa', 
-    prezzo_smc: 0.45, 
-    quota_fissa_mensile: 12, 
-    bonus_attivazione: 30, 
-    penale_recesso: false, 
-    visibile: true, 
-    created_at: '', 
+    id: '2', provider_id: 'p2', nome_offerta: 'Gas Safe Plus', tipo_tariffa: 'fissa', 
+    prezzo_smc: 0.45, quota_fissa_mensile: 12, bonus_attivazione: 30, 
+    penale_recesso: false, visibile: true, created_at: '', 
     provider: { id: 'p2', nome: 'Plenitude', attivo: true, created_at: '' } 
   } as OfferGas,
   { 
-    id: '3', 
-    provider_id: 'p3', 
-    nome_offerta: 'Combo Relax', 
-    prezzo_kwh: 0.11, 
-    prezzo_smc: 0.42, 
-    quota_fissa_mensile: 18, 
-    bonus_attivazione: 80, 
-    visibile: true, 
-    created_at: '', 
+    id: '3', provider_id: 'p3', nome_offerta: 'Combo Relax', 
+    prezzo_kwh: 0.11, prezzo_smc: 0.42, quota_fissa_mensile: 18, 
+    bonus_attivazione: 80, visibile: true, created_at: '', 
     provider: { id: 'p3', nome: 'Eni', attivo: true, created_at: '' } 
   } as OfferDual
 ];
 
-// Funzione per caricare offerte da Supabase
 async function loadOffersFromDB(serviceType: ServiceType): Promise<(OfferLuce | OfferGas | OfferDual)[]> {
   try {
     let tableName = '';
-    
     if (serviceType === 'luce') tableName = 'offers_luce';
     else if (serviceType === 'gas') tableName = 'offers_gas';
     else if (serviceType === 'dual') tableName = 'offers_dual';
     
     const { data, error } = await supabase
       .from(tableName)
-      .select(`
-        *,
-        provider:providers(*)
-      `)
+      .select('*, provider:providers(*)')
       .eq('visibile', true);
     
     if (error) {
@@ -91,7 +64,7 @@ async function loadOffersFromDB(serviceType: ServiceType): Promise<(OfferLuce | 
     return MOCK_OFFERS;
   }
 }
-// STEP 1: PROFILO E SERVIZIO
+
 const Step1Profile = ({ data, updateData, nextStep }: any) => {
   const services = [
     { id: 'luce', label: 'Luce', icon: Zap },
@@ -151,76 +124,12 @@ const Step1Profile = ({ data, updateData, nextStep }: any) => {
   );
 };
 
-// STEP 2: CONSUMI + EMAIL
-// STEP 1: PROFILO E SERVIZIO (invariato)
-const Step1Profile = ({ data, updateData, nextStep }: any) => {
-  const services = [
-    { id: 'luce', label: 'Luce', icon: Zap },
-    { id: 'gas', label: 'Gas', icon: Flame },
-    { id: 'dual', label: 'Luce + Gas', icon: LayoutGrid }
-  ];
-  const clients = [
-    { id: 'privato', label: 'Privato', icon: User },
-    { id: 'azienda', label: 'Azienda', icon: Building2 }
-  ];
-
-  return (
-    <div className="space-y-8">
-      <div className="text-center">
-        <h2 className="text-2xl font-bold text-slate-800">Cosa vuoi confrontare?</h2>
-        <p className="text-slate-500 text-sm">Personalizza la tua ricerca energetica</p>
-      </div>
-      
-      <div className="space-y-6">
-        <div>
-          <p className="text-[10px] uppercase font-bold text-slate-400 mb-3 ml-1 tracking-widest">Tipo di Servizio</p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            {services.map((s) => (
-              <button 
-                key={s.id} 
-                onClick={() => updateData({ tipo_servizio: s.id as ServiceType })} 
-                className={`p-4 md:p-6 rounded-2xl border-2 transition-all flex flex-col items-center gap-2 md:gap-3 ${data.tipo_servizio === s.id ? 'border-indigo-600 bg-indigo-50 text-indigo-600 shadow-md' : 'border-slate-100 bg-white text-slate-500 hover:border-slate-200'}`}
-              >
-                <s.icon className="w-6 h-6 md:w-8 md:h-8" />
-                <span className="font-bold text-sm md:text-base">{s.label}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div>
-          <p className="text-[10px] uppercase font-bold text-slate-400 mb-3 ml-1 tracking-widest">Tipo di Profilo</p>
-          <div className="grid grid-cols-2 gap-3">
-            {clients.map((c) => (
-              <button 
-                key={c.id} 
-                onClick={() => updateData({ tipo_cliente: c.id as any })} 
-                className={`p-3 md:p-5 rounded-xl border-2 transition-all flex flex-row items-center justify-center gap-2 ${data.tipo_cliente === c.id ? 'border-indigo-600 bg-indigo-50 text-indigo-600 shadow-sm' : 'border-slate-100 bg-white text-slate-400 hover:border-slate-200'}`}
-              >
-                <c.icon size={18} />
-                <span className="font-bold text-sm">{c.label}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <button 
-  onClick={nextStep} 
-  disabled={!data.tipo_servizio || !data.tipo_cliente}
-  className="w-full bg-indigo-600 text-white py-5 rounded-2xl font-bold hover:bg-indigo-700 shadow-xl transition-all transform hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed"
->
-  Continua
-</button>
-
-// STEP 2: CONSUMI + EMAIL (aggiornato per caricare offerte da DB)
 const Step2Consumption = ({ data, updateData, onFinish, isSaving }: any) => {
   const [loading, setLoading] = useState(false);
 
   const handleCalculate = async () => {
     setLoading(true);
     try {
-      // Carica offerte dal database
       const offers = await loadOffersFromDB(data.tipo_servizio);
       
       if (!offers || offers.length === 0) {
@@ -317,8 +226,6 @@ const Step2Consumption = ({ data, updateData, onFinish, isSaving }: any) => {
     </div>
   );
 };
-
-// STEP 4: RESULT CARD
 const Step4Result = ({ result, currentMonthly, phone, setPhone, nextStep, isSaving }: any) => {
   const validatePhone = (phone: string): boolean => {
     const phoneRegex = /^[\d\s\+\-\(\)]{9,15}$/;
@@ -408,7 +315,7 @@ const Step4Result = ({ result, currentMonthly, phone, setPhone, nextStep, isSavi
     </div>
   );
 };
-// STEP 6: OFFER DETAIL
+
 const Step6OfferDetail = ({ result, nextStep }: any) => {
   const offer = result.dettagli_offerta;
   return (
@@ -467,7 +374,6 @@ const Step6OfferDetail = ({ result, nextStep }: any) => {
   );
 };
 
-// STEP 7: ANAGRAFICA
 const Step7Anagrafica = ({ leadData, updateLeadData, bestOffer, onSubmit, isSaving }: any) => {
   const [form, setForm] = useState<ContractData & { nome: string; cognome: string }>({
     nome: leadData.nome || '',
@@ -612,7 +518,6 @@ const Step7Anagrafica = ({ leadData, updateLeadData, bestOffer, onSubmit, isSavi
   );
 };
 
-// SUCCESS PAGE
 const SuccessPage = () => (
   <div className="text-center py-10 space-y-10">
     <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="w-24 h-24 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-inner">
@@ -649,284 +554,3 @@ const SuccessPage = () => (
     </button>
   </div>
 );
-
-// COMPONENTE PRINCIPALE
-// COMPONENTE PRINCIPALE - AGGIORNATO
-const ComparisonFunnel: React.FC = () => {
-  const [currentStep, setCurrentStep] = useState(1);
-  const [isSaving, setIsSaving] = useState(false);
-  const [leadId, setLeadId] = useState<string | null>(null);
-  const [bestOffer, setBestOffer] = useState<ComparisonResult | null>(null);
-  // COMPONENTE PRINCIPALE - FIX DEFINITIVO
-const ComparisonFunnel: React.FC = () => {
-  const [currentStep, setCurrentStep] = useState(1);
-  const [isSaving, setIsSaving] = useState(false);
-  const [leadId, setLeadId] = useState<string | null>(null);
-  const [bestOffer, setBestOffer] = useState<ComparisonResult | null>(null);
-  const [phoneInput, setPhoneInput] = useState('');
-  
-  // STATO COMPLETO
-  const [tipoCliente, setTipoCliente] = useState<'privato' | 'azienda'>('privato');
-  const [tipoServizio, setTipoServizio] = useState<ServiceType>('luce');
-  const [spesaMensile, setSpesaMensile] = useState(0);
-  const [consumoLuceKwh, setConsumoLuceKwh] = useState(0);
-  const [consumoGasSmc, setConsumoGasSmc] = useState(0);
-  const [email, setEmail] = useState('');
-  const [telefono, setTelefono] = useState('');
-  const [nome, setNome] = useState('');
-  const [cognome, setCognome] = useState('');
-
-  // Costruisci data object quando serve
-  const getData = (): LeadData => ({
-    tipo_cliente: tipoCliente,
-    tipo_servizio: tipoServizio,
-    spesa_mensile: spesaMensile,
-    consumo_luce_kwh: consumoLuceKwh,
-    consumo_gas_smc: consumoGasSmc,
-    email: email,
-    telefono: telefono,
-    nome: nome,
-    cognome: cognome
-  });
-
-  // Update generico
-  const updateData = (newData: Partial<LeadData>) => {
-    if (newData.tipo_cliente !== undefined) setTipoCliente(newData.tipo_cliente);
-    if (newData.tipo_servizio !== undefined) setTipoServizio(newData.tipo_servizio);
-    if (newData.spesa_mensile !== undefined) setSpesaMensile(newData.spesa_mensile);
-    if (newData.consumo_luce_kwh !== undefined) setConsumoLuceKwh(newData.consumo_luce_kwh);
-    if (newData.consumo_gas_smc !== undefined) setConsumoGasSmc(newData.consumo_gas_smc);
-    if (newData.email !== undefined) setEmail(newData.email);
-    if (newData.telefono !== undefined) setTelefono(newData.telefono);
-    if (newData.nome !== undefined) setNome(newData.nome);
-    if (newData.cognome !== undefined) setCognome(newData.cognome);
-  };
-
-  // STEP 2 → STEP 4: Calcola e salva
-  const handleCalculate = async (result: ComparisonResult) => {
-    setIsSaving(true);
-    
-    const currentData = getData();
-    
-    console.log('🔍 DATI DA SALVARE:', currentData);
-    
-    try {
-      // 1. Salva lead
-      // Costruisci oggetto esplicito
-const leadToInsert = {
-  tipo_cliente: tipoCliente,  // usa direttamente lo state
-  tipo_servizio: tipoServizio,  // usa direttamente lo state
-  email: email,  // usa direttamente lo state
-  origine: 'manual',
-  step_corrente: 'comparison',
-  stato: 'parziale'
-};
-
-console.log('📤 Inserisco lead:', leadToInsert);
-
-const { data: lead, error: leadError } = await supabase
-  .from('leads')
-  .insert([leadToInsert])
-  .select()
-  .single();
-        .select()
-        .single();
-      
-      if (leadError) throw leadError;
-      
-      console.log('✅ Lead salvato:', lead);
-      setLeadId(lead.id);
-      
-      // 2. Salva consumi
-      const consumiToInsert = {
-  lead_id: lead.id,
-  spesa_mensile: spesaMensile,
-  consumo_luce_kwh: consumoLuceKwh,
-  consumo_gas_smc: consumoGasSmc
-};
-
-console.log('📤 Inserisco consumi:', consumiToInsert);
-
-await supabase.from('lead_consumptions').insert([consumiToInsert]);
-      
-      console.log('✅ Consumi salvati');
-      
-      // 3. Salva comparison
-      await supabase.from('lead_comparisons').insert([{
-        lead_id: lead.id,
-        offer_id: result.offer_id,
-        tipo_offerta: result.tipo_offerta,
-        spesa_annua_stimata: result.spesa_annua_stimata,
-        risparmio_annuo: result.risparmio_annuo
-      }]);
-      
-      console.log('✅ Comparison salvato');
-      
-      setBestOffer(result);
-      setCurrentStep(result.risparmio_annuo <= 0 ? 99 : 4);
-      
-    } catch (err) { 
-      console.error('❌ Errore:', err);
-      setBestOffer(result); 
-      setCurrentStep(result.risparmio_annuo > 0 ? 4 : 99); 
-    } finally { 
-      setIsSaving(false); 
-    }
-  };
-
-  // STEP 4 → STEP 6: Aggiorna telefono
-  const handleUpdatePhoneAndProceed = async () => {
-    setIsSaving(true);
-    try {
-      setTelefono(phoneInput);
-      
-      if (leadId) {
-        await supabase.from('leads').update({ 
-          telefono: phoneInput, 
-          stato: 'completo' 
-        }).eq('id', leadId);
-        
-        console.log('✅ Telefono salvato');
-      }
-      
-      setCurrentStep(6);
-    } catch (err) { 
-      console.error('❌ Errore:', err);
-      setCurrentStep(6); 
-    } finally { 
-      setIsSaving(false); 
-    }
-  };
-
-  // STEP 7 → SUCCESS
-  const handleFinalSubmit = async (contract: ContractData) => {
-    setIsSaving(true);
-    try {
-      if (!leadId || !bestOffer) throw new Error('Dati mancanti');
-      
-      setNome(contract.nome);
-      setCognome(contract.cognome);
-      
-      // Aggiorna lead
-      await supabase.from('leads').update({ 
-        nome: contract.nome, 
-        cognome: contract.cognome,
-        stato: 'inviato', 
-        step_corrente: 'anagrafica'
-      }).eq('id', leadId);
-      
-      console.log('✅ Lead aggiornato con nome/cognome');
-      
-      // Salva contratto
-      await supabase.from('contracts_pre').insert([{
-        lead_id: leadId,
-        offer_id: bestOffer.offer_id,
-        tipo_pratica: 'cambio',
-        indirizzo_fornitura: contract.indirizzo,
-        cap: contract.cap,
-        citta: contract.citta,
-        provincia: contract.provincia,
-        stato: 'in_attesa'
-      }]);
-      
-      console.log('✅ Contratto salvato');
-      
-      // Invia email
-      const emailData = getData();
-      emailData.nome = contract.nome;
-      emailData.cognome = contract.cognome;
-      emailData.id = leadId;
-      
-      await EmailService.sendContractEmails(emailData, contract, bestOffer.offer_name, bestOffer.risparmio_annuo);
-      
-      console.log('✅ Email inviate');
-      setCurrentStep(100);
-      
-    } catch (err) { 
-      console.error('❌ Errore finale:', err);
-      setCurrentStep(100); 
-    } finally { 
-      setIsSaving(false); 
-    }
-  };
-
-  const progress = currentStep >= 99 ? 100 : (currentStep / 7) * 100;
-  const data = getData();
-
-  return (
-    <div className="w-full max-w-2xl px-4 py-8">
-      <div className="mb-10 w-full bg-slate-200 h-1.5 rounded-full overflow-hidden shadow-inner">
-        <motion.div className="bg-indigo-600 h-full" animate={{ width: `${progress}%` }} />
-      </div>
-      <div className="bg-white rounded-[3rem] shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-slate-100 min-h-[600px] flex flex-col p-8 md:p-14 relative overflow-hidden">
-        <AnimatePresence mode="wait">
-          {currentStep === 1 && (
-            <motion.div key="s1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-              <Step1Profile data={data} updateData={updateData} nextStep={() => setCurrentStep(2)} />
-            </motion.div>
-          )}
-          
-          {currentStep === 2 && (
-            <motion.div key="s2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-              <Step2Consumption data={data} updateData={updateData} onFinish={handleCalculate} isSaving={isSaving} />
-            </motion.div>
-          )}
-          
-          {currentStep === 4 && bestOffer && (
-            <motion.div key="s4" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-              <Step4Result 
-                result={bestOffer} 
-                currentMonthly={spesaMensile}
-                phone={phoneInput} 
-                setPhone={setPhoneInput} 
-                nextStep={handleUpdatePhoneAndProceed} 
-                isSaving={isSaving} 
-              />
-            </motion.div>
-          )}
-
-          {currentStep === 6 && bestOffer && (
-            <motion.div key="s6" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-              <Step6OfferDetail result={bestOffer} nextStep={() => setCurrentStep(7)} />
-            </motion.div>
-          )}
-          
-          {currentStep === 7 && bestOffer && (
-            <motion.div key="s7" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
-              <Step7Anagrafica 
-                leadData={data} 
-                updateLeadData={updateData} 
-                bestOffer={bestOffer} 
-                onSubmit={handleFinalSubmit} 
-                isSaving={isSaving} 
-              />
-            </motion.div>
-          )}
-          
-          {currentStep === 100 && (
-            <motion.div key="success" initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
-              <SuccessPage />
-            </motion.div>
-          )}
-          
-          {currentStep === 99 && (
-            <motion.div key="exit" initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
-              <div className="text-center py-10 space-y-5">
-                <div className="w-20 h-20 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto">
-                  <AlertCircle size={40} />
-                </div>
-                <h2 className="text-2xl font-black text-slate-800">Sei già al top!</h2>
-                <p className="text-slate-500">La tua tariffa attuale è eccellente, ti consigliamo di non cambiarla.</p>
-                <button onClick={() => window.location.reload()} className="text-indigo-600 font-bold hover:underline">
-                  Ricomincia ricerca
-                </button>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-    </div>
-  );
-};
-
-export default ComparisonFunnel;
